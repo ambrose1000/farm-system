@@ -1,0 +1,75 @@
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from typing import List
+
+import models, schemas, database, auth
+from auth import get_current_user, TokenData
+import crud_livestock
+
+# --- Create tables ---
+models.Base.metadata.create_all(bind=database.engine)
+
+app = FastAPI()
+
+# --- CORS middleware ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Database dependency ---
+def get_db():
+    db = database.SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# --- User endpoints ---
+@app.get("/me")
+def read_users_me(current_user: TokenData = Depends(get_current_user)):
+    return {"email": current_user.email}
+
+@app.post("/register", response_model=schemas.UserResponse)
+def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    hashed_pw = auth.hash_password(user.password)
+    new_user = models.User(username=user.username, email=user.email, password_hash=hashed_pw)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+@app.post("/login")
+def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if not db_user or not auth.verify_password(user.password, db_user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = auth.create_access_token({"sub": db_user.email})
+    return {"access_token": token, "token_type": "bearer"}
+
+# --- Livestock endpoints ---
+@app.post("/livestock", response_model=schemas.LivestockResponse)
+def add_livestock(livestock: schemas.LivestockCreate, db: Session = Depends(get_db)):
+    try:
+        db_livestock = crud_livestock.create_livestock(db, livestock)
+        return db_livestock
+    except IntegrityError as e:
+        db.rollback()
+        if "livestock_tag_number_key" in str(e.orig):
+            raise HTTPException(status_code=400, detail="Tag number already exists")
+        else:
+            raise HTTPException(status_code=500, detail="Internal Server Error")
+
+@app.get("/livestock", response_model=List[schemas.LivestockResponse])
+def get_livestock(db: Session = Depends(get_db)):
+    return db.query(models.Livestock).all()

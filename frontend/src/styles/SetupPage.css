@@ -1,0 +1,103 @@
+.setup-container {
+  padding: 20px;
+}
+
+.setup-title {
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.setup-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Form styling */
+.setup-form {
+  background: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.setup-form .form-group {
+  margin-bottom: 12px;
+}
+
+.setup-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.setup-form input,
+.setup-form select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.form-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.form-actions button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  background: #007bff;
+  color: white;
+}
+
+.form-actions button[type="button"] {
+  background: #6c757d;
+}
+
+/* Table styling */
+.setup-table {
+  overflow-x: auto;
+}
+
+.setup-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.setup-table th,
+.setup-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.setup-table th {
+  background: #f1f1f1;
+  font-weight: bold;
+}
+
+.setup-table button {
+  margin-right: 6px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.setup-table button:first-of-type {
+  background: #ffc107;
+  color: black;
+}
+
+.setup-table button:last-of-type {
+  background: #dc3545;
+  color: white;
+}

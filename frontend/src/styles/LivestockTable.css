@@ -1,0 +1,113 @@
+/* Container */
+.livestock-container {
+  max-width: 900px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Title */
+.livestock-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Add Link */
+.add-link {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: #4CAF50;
+  font-weight: bold;
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+.add-link:hover {
+  color: #2e7d32;
+}
+
+/* Table */
+.livestock-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.livestock-table th,
+.livestock-table td {
+  border-bottom: 1px solid #ddd;
+  padding: 10px;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.livestock-table thead {
+  background-color: #f4f6f8;
+  color: #333;
+}
+
+.livestock-table tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.livestock-table tbody tr:hover {
+  background-color: #f1f5f9;
+  transition: background 0.2s ease-in-out;
+}
+
+/* Castrated badge */
+.badge-yes {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.badge-no {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+/* Status badge */
+.status-active {
+  background: #d4edda;
+  color: #155724;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-inactive {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+/* Search box container */
+.search-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.search-input {
+  width: 300px;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.search-input:focus {
+  border-color: #4CAF50;
+  outline: none;
+  box-shadow: 0 0 4px rgba(76, 175, 80, 0.4);
+}

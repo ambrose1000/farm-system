@@ -1,0 +1,11 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  margin-left: 220px; /* width of sidebar */
+  padding: 20px;
+  flex: 1;
+  background: #f9f9f9;
+}

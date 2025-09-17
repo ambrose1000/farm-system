@@ -3,10 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import List
-
 import models, schemas, database, auth
 from auth import get_current_user, TokenData
 import crud_livestock
+from routers import reports
+from routers import locations, owners, categories, species, livestock
 
 # --- Create tables ---
 models.Base.metadata.create_all(bind=database.engine)
@@ -73,3 +74,19 @@ def add_livestock(livestock: schemas.LivestockCreate, db: Session = Depends(get_
 @app.get("/livestock", response_model=List[schemas.LivestockResponse])
 def get_livestock(db: Session = Depends(get_db)):
     return db.query(models.Livestock).all()
+
+
+app.include_router(locations.router, prefix="/locations", tags=["Locations"])
+# Include the router
+app.include_router(owners.router)
+
+app.include_router(categories.router)
+
+
+app.include_router(species.router)
+
+app.include_router(livestock.router)
+
+
+# --- Include routers ---
+app.include_router(reports.router)

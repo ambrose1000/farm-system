@@ -1,210 +1,278 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+// src/pages/Livestock.jsx
+import React, { useState, useEffect } from "react";
+import SetupPage from "../components/SetupPage";
 
-export default function LivestockForm() {
-  const [formData, setFormData] = useState({
-    species: "",
-    sex: "",
-    dob: "",
-    castrated: false,
-    category: "",
-    status: "active",
-    notes: "",
-    tag_number: "",
-    owner_name: ""
-  });
-  const [message, setMessage] = useState("");
-  const navigate = useNavigate();
+function Livestock() {
+  const [formData, setFormData] = useState(initialForm());
+  const [editingId, setEditingId] = useState(null);
 
-  // Calculate category based on species, sex, dob, castrated
-  const determineCategory = (species, sex, dob, castrated) => {
-    if (!species || !sex || !dob) return "";
-    const birthDate = new Date(dob);
-    const today = new Date();
-    const ageMonths = (today.getFullYear() - birthDate.getFullYear()) * 12 + (today.getMonth() - birthDate.getMonth());
+  const [species, setSpecies] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [owners, setOwners] = useState([]);
+  const [livestock, setLivestock] = useState([]);
 
-    if (species === "cow") {
-      if (ageMonths < 12) return sex === "male" ? "Calf (Male)" : "Calf (Female)";
-      if (sex === "male") return castrated ? "Steer" : "Bull";
-      if (sex === "female") return ageMonths < 24 ? "Heifer" : "Cow";
-    } else if (species === "sheep") {
-      if (ageMonths < 12) return "Lamb";
-      return sex === "male" ? (castrated ? "Wether" : "Ram") : "Ewe";
-    } else if (species === "goat") {
-      if (ageMonths < 12) return "Kid";
-      return sex === "male" ? (castrated ? "Wether" : "Buck") : "Doe";
-    }
-    return "Unknown";
+  function initialForm() {
+    return {
+      tag_number: "",
+      species_id: "",
+      category_id: "",
+      owner_id: "",
+      location_id: "",
+      sex: "Male",
+      dob: "",
+      castrated: false,
+      status: "Active",
+      event_type: "",
+      event_date: "",
+    };
+  }
+
+  // --- Load dropdown + table data ---
+  useEffect(() => {
+    fetch("http://localhost:8000/species").then(r => r.json()).then(setSpecies);
+    fetch("http://localhost:8000/categories").then(r => r.json()).then(setCategories);
+    fetch("http://localhost:8000/locations").then(r => r.json()).then(setLocations);
+    fetch("http://localhost:8000/owners").then(r => r.json()).then(setOwners);
+    fetchLivestock();
+  }, []);
+
+  const fetchLivestock = () => {
+    fetch("http://localhost:8000/livestock")
+      .then(r => r.json())
+      .then(setLivestock);
   };
 
+  // --- Form handlers ---
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const newValue = type === "checkbox" ? checked : value;
-    setFormData(prev => {
-      const updated = { ...prev, [name]: newValue };
-      // Automatically update category when species, sex, dob, or castrated changes
-      if (["species", "sex", "dob", "castrated"].includes(name)) {
-        updated.category = determineCategory(updated.species, updated.sex, updated.dob, updated.castrated);
-      }
-      return updated;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      await api.post("/livestock", formData);
-      setMessage("✅ Livestock added successfully!");
-      setFormData({
-        species: "",
-        sex: "",
-        dob: "",
-        castrated: false,
-        category: "",
-        status: "active",
-        notes: "",
-        tag_number: "",
-        owner_name: ""
+
+    const payload = {
+      ...formData,
+      species_id: parseInt(formData.species_id),
+      category_id: parseInt(formData.category_id),
+      owner_id: parseInt(formData.owner_id),
+      location_id: parseInt(formData.location_id),
+    };
+
+    const url = editingId
+      ? `http://localhost:8000/livestock/${editingId}`
+      : "http://localhost:8000/livestock/";
+    const method = editingId ? "PUT" : "POST";
+
+    fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Failed to save");
+        }
+        return res.json();
+      })
+      .then(() => {
+        setFormData(initialForm());
+        setEditingId(null);
+        fetchLivestock();
+      })
+      .catch((err) => {
+        alert("Error: " + err.message);
+        console.error("Submit failed:", err);
       });
-    } catch (error) {
-      console.error("❌ Error adding livestock:", error);
-      setMessage("❌ Error: " + (error.response?.data?.detail || error.message));
-    }
   };
 
-  return (
+  const handleEdit = (row) => {
+    setFormData({
+      ...row,
+      dob: row.dob ? row.dob.split("T")[0] : "",
+      event_date: row.event_date ? row.event_date.split("T")[0] : "",
+    });
+    setEditingId(row.id);
+  };
 
-    
-    <div
-      style={{
-        maxWidth: "400px",
-        margin: "50px auto",
-        padding: "20px",
-        border: "1px solid #ddd",
-        borderRadius: "8px"
-      }}
-    >
-      <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Add Livestock</h2>
-      <form onSubmit={handleSubmit}>
-        <select
-          name="species"
-          value={formData.species}
-          onChange={handleChange}
-          required
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
-        >
-          <option value="">Select Species</option>
-          <option value="cow">Cow</option>
-          <option value="sheep">Sheep</option>
-          <option value="goat">Goat</option>
-        </select>
+  const handleDelete = (id) => {
+    if (!window.confirm("Are you sure you want to delete this livestock?")) return;
 
-        <select
-          name="sex"
-          value={formData.sex}
-          onChange={handleChange}
-          required
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
-        >
-          <option value="">Select Sex</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-        </select>
+    fetch(`http://localhost:8000/livestock/${id}`, { method: "DELETE" })
+      .then(() => fetchLivestock())
+      .catch((err) => console.error("Delete failed:", err));
+  };
 
-        <input
-          type="date"
-          name="dob"
-          value={formData.dob}
-          onChange={handleChange}
-          required
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
-        />
-
-        <div style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}>
-          <input
-            type="checkbox"
-            name="castrated"
-            checked={formData.castrated}
-            onChange={handleChange}
-            id="castrated"
-          />
-          <label htmlFor="castrated" style={{ marginLeft: "8px" }}>Castrated</label>
-        </div>
-
-        <input
-          type="text"
-          name="category"
-          value={formData.category}
-          readOnly
-          placeholder="Category (auto)"
-          style={{ width: "100%", padding: "10px", marginBottom: "10px", backgroundColor: "#f0f0f0" }}
-        />
-
-        <input
-          type="text"
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-          required
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
-        />
-
+  // --- Form JSX ---
+  const form = (
+    <form onSubmit={handleSubmit}>
+      <div className="form-group">
+        <label>Tag Number</label>
         <input
           type="text"
           name="tag_number"
           value={formData.tag_number}
           onChange={handleChange}
           required
-          placeholder="Tag Number"
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
         />
+      </div>
 
+      <div className="form-group">
+        <label>Species</label>
+        <select name="species_id" value={formData.species_id} onChange={handleChange} required>
+          <option value="">-- Select Species --</option>
+          {species.map(s => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Category</label>
+        <select name="category_id" value={formData.category_id} onChange={handleChange} required>
+          <option value="">-- Select Category --</option>
+          {categories
+            .filter(c => c.species_id === parseInt(formData.species_id))
+            .map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Owner</label>
+        <select name="owner_id" value={formData.owner_id} onChange={handleChange} required>
+          <option value="">-- Select Owner --</option>
+          {owners.map(o => (
+            <option key={o.id} value={o.id}>{o.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Location</label>
+        <select name="location_id" value={formData.location_id} onChange={handleChange} required>
+          <option value="">-- Select Location --</option>
+          {locations.map(l => (
+            <option key={l.id} value={l.id}>{l.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Sex</label>
+        <select name="sex" value={formData.sex} onChange={handleChange}>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Date of Birth</label>
+        <input
+          type="date"
+          name="dob"
+          value={formData.dob}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div className="form-group">
+        <label>
+          <input
+            type="checkbox"
+            name="castrated"
+            checked={formData.castrated}
+            onChange={handleChange}
+          />
+          Castrated
+        </label>
+      </div>
+
+      <div className="form-group">
+        <label>Status</label>
+        <select name="status" value={formData.status} onChange={handleChange}>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label>Event Type</label>
         <input
           type="text"
-          name="owner_name"
-          value={formData.owner_name}
+          name="event_type"
+          value={formData.event_type}
           onChange={handleChange}
-          required
-          placeholder="Owner Name"
-          style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
         />
+      </div>
 
-        <textarea
-          name="notes"
-          value={formData.notes}
+      <div className="form-group">
+        <label>Event Date</label>
+        <input
+          type="date"
+          name="event_date"
+          value={formData.event_date}
           onChange={handleChange}
-          placeholder="Notes"
-          style={{ width: "100%", padding: "10px", marginBottom: "20px" }}
         />
+      </div>
 
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            padding: "10px",
-            backgroundColor: "#4CAF50",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer"
-          }}
-        >
-          Add Livestock
+      <div className="form-actions">
+        <button type="submit">{editingId ? "Update" : "Save"}</button>
+        <button type="button" onClick={() => { setFormData(initialForm()); setEditingId(null); }}>
+          Cancel
         </button>
-      </form>
-
-      {message && (
-        <p
-          style={{
-            marginTop: "15px",
-            textAlign: "center",
-            color: message.startsWith("✅") ? "green" : "red"
-          }}
-        >
-          {message}
-        </p>
-      )}
-    </div>
+      </div>
+    </form>
   );
+
+  // --- Table JSX ---
+  const table = (
+    <table>
+      <thead>
+        <tr>
+          <th>Tag #</th>
+          <th>Species</th>
+          <th>Category</th>
+          <th>Owner</th>
+          <th>Location</th>
+          <th>Sex</th>
+          <th>DOB</th>
+          <th>Castrated</th>
+          <th>Status</th>
+          <th>Event</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {livestock.map(l => (
+          <tr key={l.id}>
+            <td>{l.tag_number}</td>
+            <td>{species.find(s => s.id === l.species_id)?.name}</td>
+            <td>{categories.find(c => c.id === l.category_id)?.name}</td>
+            <td>{owners.find(o => o.id === l.owner_id)?.name}</td>
+            <td>{locations.find(lo => lo.id === l.location_id)?.name}</td>
+            <td>{l.sex}</td>
+            <td>{l.dob}</td>
+            <td>{l.castrated ? "Yes" : "No"}</td>
+            <td>{l.status}</td>
+            <td>{l.event_type} {l.event_date ? `(${l.event_date})` : ""}</td>
+            <td>
+              <button onClick={() => handleEdit(l)}>Edit</button>
+              <button onClick={() => handleDelete(l.id)}>Delete</button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  return <SetupPage title="Livestock Registration" form={form} table={table} />;
 }
+
+export default Livestock;

@@ -21,37 +21,79 @@ class UserResponse(BaseModel):
 
 
 
-class LivestockBase(BaseModel):
-    species: str
-    sex: str
-    dob: Optional[date] = None
-    age_years: Optional[int] = None
-    castrated: bool
-    category: str
-    status: str
-    notes: Optional[str] = None
-    tag_number: str
-    owner_name: str
 
-    @model_validator(mode="before")
-    def calculate_dob(cls, values):
-        # Case 1: values is a dict (from request body)
-        if isinstance(values, dict):
-            dob = values.get("dob")
-            age_years = values.get("age_years")
-            if not dob and age_years is not None:
-                today = date.today()
-                values["dob"] = today - timedelta(days=age_years * 365)
-            elif not dob and age_years is None:
-                raise ValueError("Either dob or age_years must be provided")
-        return values
+# Species
+class SpeciesBase(BaseModel):
+    name: str
+
+class SpeciesCreate(SpeciesBase):
+    pass
+
+class Species(SpeciesBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+# Category
+class CategoryBase(BaseModel):
+    name: str
+    species_id: int
+
+class CategoryCreate(CategoryBase):
+    pass
+
+class CategoryResponse(CategoryBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+# Location
+class LocationBase(BaseModel):
+    name: str
+
+class LocationCreate(LocationBase):
+    pass
+
+class LocationResponse(LocationBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+# Owner
+class OwnerBase(BaseModel):
+    name: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+
+class OwnerCreate(OwnerBase):
+    pass
+
+class OwnerResponse(OwnerBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+class LivestockBase(BaseModel):
+    tag_number: str
+    species_id: int
+    category_id: int
+    owner_id: int
+    location_id: int
+    sex: str
+    dob: Optional[date]
+    castrated: Optional[bool] = False
+    status: str
+    event_type: Optional[str] = None
+    event_date: Optional[date] = None
+
+
 class LivestockCreate(LivestockBase):
     pass
 
+
 class LivestockResponse(LivestockBase):
     id: int
-    category: Optional[str]
-    status: str
 
     class Config:
         orm_mode = True

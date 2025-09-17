@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { Link } from "react-router-dom";
+import "../styles/LivestockTable.css";
 
 export default function LivestockTable() {
   const [livestockList, setLivestockList] = useState([]);
+  const [filteredList, setFilteredList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
 
-  // Fetch livestock data from backend
+  // Fetch livestock data
   const fetchLivestock = async () => {
     try {
       const response = await api.get("/livestock");
       setLivestockList(response.data);
+      setFilteredList(response.data); // ✅ default filtered list
       setLoading(false);
     } catch (err) {
       console.error("Error fetching livestock:", err);
@@ -24,55 +28,89 @@ export default function LivestockTable() {
     fetchLivestock();
   }, []);
 
-  return (
-    <div style={{ maxWidth: "900px", margin: "50px auto", padding: "20px" }}>
-      <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Registered Livestock</h2>
+  // Handle search filtering
+  useEffect(() => {
+    if (!search) {
+      setFilteredList(livestockList);
+    } else {
+      setFilteredList(
+        livestockList.filter(
+          (animal) =>
+            animal.tag_number?.toLowerCase().includes(search.toLowerCase()) ||
+            animal.species?.toLowerCase().includes(search.toLowerCase()) ||
+            animal.owner_name?.toLowerCase().includes(search.toLowerCase()) ||
+            animal.status?.toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    }
+  }, [search, livestockList]);
 
-      <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        <Link to="/livestock" style={{ color: "#4CAF50", fontWeight: "bold", textDecoration: "none" }}>
-          Add New Livestock
+  return (
+    <div className="livestock-container">
+      <h2 className="livestock-title">Registered Livestock</h2>
+
+      <div style={{ textAlign: "center" }}>
+        <Link to="/livestock" className="add-link">
+          ➕ Add New Livestock
         </Link>
+      </div>
+
+      {/* ✅ Search box */}
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Search by tag, species, owner, or status..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="search-input"
+        />
       </div>
 
       {loading ? (
         <p>Loading...</p>
       ) : error ? (
         <p style={{ color: "red" }}>{error}</p>
-      ) : livestockList.length === 0 ? (
-        <p>No livestock registered yet.</p>
+      ) : filteredList.length === 0 ? (
+        <p>No livestock found.</p>
       ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            textAlign: "left",
-          }}
-        >
+        <table className="livestock-table">
           <thead>
             <tr>
-              <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>Tag Number</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>Species</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>Sex</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>Category</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>DOB</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>Castrated</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>Owner</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>Status</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>Notes</th>
+              <th>Tag Number</th>
+              <th>Species</th>
+              <th>Sex</th>
+              <th>Category</th>
+              <th>DOB</th>
+              <th>Castrated</th>
+              <th>Owner</th>
+              <th>Status</th>
+              <th>Notes</th>
             </tr>
           </thead>
           <tbody>
-            {livestockList.map((animal) => (
+            {filteredList.map((animal) => (
               <tr key={animal.id}>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>{animal.tag_number}</td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>{animal.species}</td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>{animal.sex}</td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>{animal.category}</td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>{animal.dob}</td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>{animal.castrated ? "Yes" : "No"}</td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>{animal.owner_name}</td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>{animal.status}</td>
-                <td style={{ borderBottom: "1px solid #ddd", padding: "8px" }}>{animal.notes}</td>
+                <td>{animal.tag_number}</td>
+                <td>{animal.species}</td>
+                <td>{animal.sex}</td>
+                <td>{animal.category}</td>
+                <td>{animal.dob}</td>
+                <td className={animal.castrated ? "badge-yes" : "badge-no"}>
+                  {animal.castrated ? "Yes" : "No"}
+                </td>
+                <td>{animal.owner_name}</td>
+                <td>
+                  <span
+                    className={
+                      animal.status === "active"
+                        ? "status-active"
+                        : "status-inactive"
+                    }
+                  >
+                    {animal.status}
+                  </span>
+                </td>
+                <td>{animal.notes}</td>
               </tr>
             ))}
           </tbody>

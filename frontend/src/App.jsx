@@ -4,54 +4,46 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Livestock from "./pages/Livestock";
-import ProtectedRoute from "./components/ProtectedRoute";
 import LivestockTable from "./pages/LivestockTable";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
+import Types from "./pages/setup/Types";
+import Categories from "./pages/setup/Categories";
+import Locations from "./pages/setup/Locations";
+import Owners from "./pages/setup/Owners";
+
 
 
 function App() {
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public routes (no navbar) */}
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Protected routes */}
+      {/* Protected routes with Sidebar (Layout) */}
       <Route
-        path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <Layout />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/livestock"
-        element={
-          <ProtectedRoute>
-            <Livestock />
-          </ProtectedRoute>
-        }
-      />
-       <Route
-        path="/LivestockTable"
-        element={
-          <ProtectedRoute>
-            <LivestockTable />
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/livestock" element={<Livestock />} />
+        <Route path="/livestocktable" element={<LivestockTable />} />
+
+     <Route path="/setup/types" element={<Types />} />
+     <Route path="/setup/categories" element={<Categories />} />
+      <Route path="/setup/locations" element={<Locations />} />
+      <Route path="/setup/Owners" element={<Owners />} />
+
+       
+      </Route>
     </Routes>
   );
 }
 
 export default App;
- 

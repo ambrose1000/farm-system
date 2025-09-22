@@ -124,8 +124,8 @@ function Locations() {
                   <td>{loc.id}</td>
                   <td>{loc.name}</td>
                   <td>
-                    <button onClick={() => handleEdit(loc)}>Edit</button>
-                    <button onClick={() => handleDelete(loc.id)}>Delete</button>
+                    <button  className="edit-btn" onClick={() => handleEdit(loc)}>Edit</button>
+                    <button  className="delete-btn" onClick={() => handleDelete(loc.id)}>Delete</button>
                   </td>
                 </tr>
               ))

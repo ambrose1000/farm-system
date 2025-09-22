@@ -1,0 +1,216 @@
+.reports-container {
+  padding: 20px;
+}
+
+.reports-title {
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #5a3e2b; /* dark brown title */
+}
+
+.reports-content {
+  display: grid;
+  grid-template-columns: 1fr 3fr; /* sidebar smaller, main content bigger */
+  gap: 20px;
+  align-items: start;
+}
+
+/* Sidebar / filter form */
+.reports-form {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 16px;
+  background: #fffaf5; /* light cream background */
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.reports-form .form-group {
+  margin-bottom: 12px;
+}
+
+.reports-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #3e2a1f;
+}
+
+.reports-form input,
+.reports-form select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.form-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.form-actions button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.form-actions button[type="submit"] {
+  background: #a67c52; /* brown submit */
+  color: white;
+}
+
+.form-actions button[type="button"] {
+  background: #edd9b0; /* light cream cancel */
+  color: #1a1a1a;
+}
+
+/* Table Styling */
+.reports-table {
+  overflow-x: auto;
+  max-height: 80vh;
+  background: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.reports-table table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.reports-table th,
+.reports-table td {
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  text-align: left;
+  border-radius: 4px;
+}
+
+.reports-table th {
+  background: #c19a6b; /* brown header */
+  color: #fff;
+  font-weight: bold;
+}
+
+.reports-table tr:nth-child(even) {
+  background: #f5f0e6; /* soft beige */
+}
+
+.reports-table tr:hover {
+  background: #e0c79b; /* darker beige on hover */
+}
+
+/* Action buttons inside tables */
+.reports-table button {
+  margin-right: 6px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.reports-table button:first-of-type {
+  background: #c19a6b;
+  color: white;
+}
+
+.reports-table button:last-of-type {
+  background: #a67c52;
+  color: white;
+}
+/* ======================= */
+/* Modal Overlay + Content */
+/* ======================= */
+
+.reports-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5); /* dark overlay */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* above all content */
+}
+
+.reports-modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  width: 70%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: fadeInScale 0.25s ease-in-out;
+}
+
+/* Title */
+.reports-modal h3 {
+  margin-bottom: 16px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #5a3e2b; /* brown title */
+}
+
+/* Table inside modal */
+.reports-modal table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.reports-modal th,
+.reports-modal td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.reports-modal th {
+  background: #c19a6b; /* brown header */
+  color: #fff;
+}
+
+.reports-modal tr:nth-child(even) {
+  background: #f5f0e6; /* soft beige */
+}
+
+.reports-modal tr:hover {
+  background: #e0c79b; /* darker highlight */
+}
+
+/* Close button */
+.reports-modal .close-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  background: #a67c52;
+  color: white;
+  transition: background 0.2s ease-in-out;
+}
+
+.reports-modal .close-btn:hover {
+  background: #8b623d;
+}
+
+/* Animation */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

@@ -8,9 +8,12 @@ from auth import get_current_user, TokenData
 import crud_livestock
 from routers import reports
 from routers import locations, owners, categories, species, livestock
+from routers.health import diseases, medications, vets, event_types, events, healthreports
+
 
 # --- Create tables ---
 models.Base.metadata.create_all(bind=database.engine)
+
 
 app = FastAPI()
 
@@ -86,6 +89,14 @@ app.include_router(categories.router)
 app.include_router(species.router)
 
 app.include_router(livestock.router)
+
+# include health routers
+app.include_router(diseases.router)
+app.include_router(medications.router)
+app.include_router(vets.router)
+app.include_router(event_types.router)
+app.include_router(events.router)
+app.include_router(healthreports.router)
 
 
 # --- Include routers ---

@@ -120,8 +120,8 @@ function Types() {
                   <td>{t.id}</td>
                   <td>{t.name}</td>
                   <td>
-                    <button onClick={() => handleEdit(t)}>Edit</button>
-                    <button onClick={() => handleDelete(t.id)}>Delete</button>
+                    <button  className="edit-btn" onClick={() => handleEdit(t)}>Edit</button>
+                    <button  className="delete-btn" onClick={() => handleDelete(t.id)}>Delete</button>
                   </td>
                 </tr>
               ))

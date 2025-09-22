@@ -1,21 +1,10 @@
-from fastapi import APIRouter, Depends
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-import tempfile, datetime
-
+from sqlalchemy import func
 import models, database
-
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.graphics.shapes import Drawing
-from reportlab.graphics.charts.barcharts import VerticalBarChart
-from reportlab.graphics.charts.piecharts import Pie
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
-# --- DB dependency ---
 def get_db():
     db = database.SessionLocal()
     try:
@@ -23,179 +12,210 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/daily")
-def generate_daily_report(db: Session = Depends(get_db)):
-    livestock = db.query(models.Livestock).all()
 
-    # --- Count by species ---
-    species_counts = {}
-    for animal in livestock:
-        if not animal.species:
-            continue
-        species_counts[animal.species] = species_counts.get(animal.species, 0) + 1
+# ================================
+# Existing endpoints
+# ================================
+@router.get("/inventory")
+def inventory_report(db: Session = Depends(get_db)):
+    total = db.query(func.count(models.Livestock.id)).scalar()
 
-    # --- Count by owner ---
-    owner_counts = {}
-    for animal in livestock:
-        if not animal.owner_name:
-            continue
-        owner_counts[animal.owner_name] = owner_counts.get(animal.owner_name, 0) + 1
+    species_data = (
+        db.query(
+            models.Species.id.label("species_id"),
+            models.Species.name.label("species_name"),
+            func.count(models.Livestock.id).label("count"),
+        )
+        .join(models.Livestock, models.Livestock.species_id == models.Species.id)
+        .group_by(models.Species.id, models.Species.name)
+        .all()
+    )
 
-    # --- Daily events ---
-    today = datetime.date.today()
-    events_today = {"born": 0, "bought": 0, "sold": 0, "died": 0}
-    for animal in livestock:
-        if getattr(animal, "event_type", None) and getattr(animal, "event_date", None):
-            if animal.event_date.date() == today and animal.event_type in events_today:
-                events_today[animal.event_type] += 1
+    owner_data = (
+        db.query(
+            models.Owner.id.label("owner_id"),
+            models.Owner.name.label("owner_name"),
+            func.count(models.Livestock.id).label("count"),
+        )
+        .join(models.Livestock, models.Livestock.owner_id == models.Owner.id)
+        .group_by(models.Owner.id, models.Owner.name)
+        .all()
+    )
 
-    # --- Define categories ---
-    categories_map = {
-        "cow": ["Calf (Male)", "Calf (Female)", "Bull", "Steer", "Heifer", "Cow"],
-        "sheep": ["Lamb", "Ram", "Wether", "Ewe"],
-        "goat": ["Kid", "Buck", "Wether", "Doe"],
+    return {
+        "total": total or 0,
+        "by_species": [dict(row._mapping) for row in species_data],
+        "by_owner": [dict(row._mapping) for row in owner_data],
     }
-    species_category_counts = {sp: {cat: 0 for cat in cats} for sp, cats in categories_map.items()}
 
-    # --- Categorize ---
-    from datetime import date
-    def determine_category(species, sex, dob, castrated):
-        if not dob:
-            return "Unknown"
-        age_months = (date.today().year - dob.year) * 12 + (date.today().month - dob.month)
-        if species == "cow":
-            if age_months < 12:
-                return "Calf (Male)" if sex == "male" else "Calf (Female)"
-            if sex == "male":
-                return "Steer" if castrated else "Bull"
-            if sex == "female":
-                return "Heifer" if age_months < 24 else "Cow"
-        elif species == "sheep":
-            if age_months < 12:
-                return "Lamb"
-            return "Wether" if sex == "male" and castrated else ("Ram" if sex == "male" else "Ewe")
-        elif species == "goat":
-            if age_months < 12:
-                return "Kid"
-            return "Wether" if sex == "male" and castrated else ("Buck" if sex == "male" else "Doe")
-        return "Unknown"
 
-    for animal in livestock:
-        category = determine_category(
-            animal.species, animal.sex, getattr(animal, "dob", None), getattr(animal, "castrated", False)
+@router.get("/health-events-summary")
+def health_events_summary(
+    date_from: str = Query(None),
+    date_to: str = Query(None),
+    db: Session = Depends(get_db),
+):
+    q = (
+        db.query(
+            models.HealthEventType.id.label("event_type_id"),
+            models.HealthEventType.name.label("event_type_name"),
+            func.count(models.HealthEvent.id).label("count"),
         )
-        if animal.species in species_category_counts and category in species_category_counts[animal.species]:
-            species_category_counts[animal.species][category] += 1
-
-    # --- PDF setup ---
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    doc = SimpleDocTemplate(temp_file.name, pagesize=A4)
-
-    styles = getSampleStyleSheet()
-    story = []
-
-    # --- Title ---
-    story.append(Paragraph("Farm Daily Livestock Report", styles["Heading1"]))
-    story.append(Paragraph(f"Date: {today.strftime('%B %d, %Y')}", styles["Normal"]))
-    story.append(Spacer(1, 20))
-
-    # --- Grand total ---
-    total_livestock = len(livestock)
-    story.append(Paragraph(f"<b>Total Livestock:</b> {total_livestock}", styles["Normal"]))
-    story.append(Spacer(1, 10))
-
-    # Utility function for styled tables
-    def styled_table(data, header_color="#4CAF50"):
-        table = Table(data, hAlign="LEFT")
-        table.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(header_color)),
-                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("FONTSIZE", (0, 0), (-1, 0), 12),
-                    ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
-                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-                    ("FONTSIZE", (0, 1), (-1, -1), 10),
-                ]
-            )
-        )
-        return table
-
-    # --- Events ---
-    story.append(Paragraph("Livestock Movements Today", styles["Heading2"]))
-    events_data = [["Event", "Count"]] + [[k.capitalize(), v] for k, v in events_today.items()]
-    if len(events_data) == 1:
-        events_data.append(["No events", 0])
-    story.append(styled_table(events_data, header_color="#FF9800"))
-    story.append(Spacer(1, 20))
-
-    # --- Species totals (Bar Graph instead of Table) ---
-    story.append(Paragraph("Livestock by Species", styles["Heading2"]))
-
-    if species_counts:
-        drawing = Drawing(400, 200)
-        data = [list(species_counts.values())]
-
-        bc = VerticalBarChart()
-        bc.x = 50
-        bc.y = 30
-        bc.height = 150
-        bc.width = 300
-        bc.data = data
-        bc.strokeColor = colors.black
-
-        bc.valueAxis.valueMin = 0
-        bc.valueAxis.valueStep = max(1, max(species_counts.values()) // 5)
-        bc.valueAxis.labelTextFormat = "%d"
-
-        bc.categoryAxis.categoryNames = [s.capitalize() for s in species_counts.keys()]
-        bc.categoryAxis.labels.angle = 45
-        bc.categoryAxis.labels.dy = -15
-        bc.categoryAxis.labels.fontName = "Helvetica"
-        bc.categoryAxis.labels.fontSize = 9
-
-        bc.bars[0].fillColor = colors.HexColor("#4CAF50")
-
-        drawing.add(bc)
-        story.append(drawing)
-    else:
-        story.append(Paragraph("No data available", styles["Normal"]))
-
-    story.append(Spacer(1, 20))
-
-    # --- Species categories ---
-    story.append(Paragraph("Livestock by Categories", styles["Heading2"]))
-    cat_data = [["Species", "Category", "Count"]]
-    for sp, categories in species_category_counts.items():
-        for cat, count in categories.items():
-            cat_data.append([sp.capitalize(), cat, count])
-    if len(cat_data) == 1:
-        cat_data.append(["-", "No data", 0])
-    story.append(styled_table(cat_data, header_color="#9C27B0"))
-    story.append(Spacer(1, 20))
-
-    # --- Owners ---
-    story.append(Paragraph("Livestock by Owner", styles["Heading2"]))
-    owner_data = [["Owner", "Count"]] + [[o, c] for o, c in owner_counts.items()]
-    if len(owner_data) == 1:
-        owner_data.append(["No data", 0])
-    story.append(styled_table(owner_data, header_color="#2196F3"))
-    story.append(Spacer(1, 20))
-
-    # --- Footer ---
-    story.append(
-        Paragraph(
-            "Auto-generated by Farm Management System",
-            ParagraphStyle("footer", parent=styles["Normal"], textColor=colors.grey, fontSize=9),
+        .join(
+            models.HealthEvent,
+            models.HealthEvent.event_type_id == models.HealthEventType.id
         )
     )
 
-    doc.build(story)
+    if date_from:
+        q = q.filter(models.HealthEvent.date >= date_from)
+    if date_to:
+        q = q.filter(models.HealthEvent.date <= date_to)
 
-    return FileResponse(
-        temp_file.name,
-        filename=f"daily_report_{today}.pdf",
-        media_type="application/pdf",
+    q = q.group_by(models.HealthEventType.id, models.HealthEventType.name).all()
+    return [dict(row._mapping) for row in q]
+
+
+@router.get("/disease-incidence")
+def disease_incidence(
+    date_from: str = Query(None),
+    date_to: str = Query(None),
+    db: Session = Depends(get_db),
+):
+    q = (
+        db.query(
+            models.Disease.id.label("disease_id"),
+            models.Disease.name.label("disease_name"),
+            func.count(models.HealthEvent.id).label("count"),
+        )
+        .join(models.HealthEvent, models.HealthEvent.disease_id == models.Disease.id)
+        .filter(models.HealthEvent.disease_id.isnot(None))
     )
+
+    if date_from:
+        q = q.filter(models.HealthEvent.date >= date_from)
+    if date_to:
+        q = q.filter(models.HealthEvent.date <= date_to)
+
+    q = q.group_by(models.Disease.id, models.Disease.name).all()
+    return [dict(row._mapping) for row in q]
+
+
+# ================================
+# New: Health report endpoints
+# ================================
+@router.get("/health-report")
+def health_report(
+    date_from: str = Query(None),
+    date_to: str = Query(None),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns:
+      - total_sick: number of animals with disease events
+      - sick_animals: list of livestock with disease info
+    """
+    q = (
+        db.query(
+            models.Livestock.id.label("livestock_id"),
+            models.Livestock.tag_number.label("tag_number"),
+            models.Species.name.label("species"),
+            models.Owner.name.label("owner"),
+            models.Disease.name.label("disease"),
+            models.HealthEvent.date.label("event_date"),
+            models.HealthEvent.notes.label("notes"),
+        )
+        .join(models.HealthEvent, models.HealthEvent.livestock_id == models.Livestock.id)
+        .join(models.Disease, models.HealthEvent.disease_id == models.Disease.id)
+        .join(models.Species, models.Livestock.species_id == models.Species.id)
+        .join(models.Owner, models.Livestock.owner_id == models.Owner.id)
+    )
+
+    if date_from:
+        q = q.filter(models.HealthEvent.date >= date_from)
+    if date_to:
+        q = q.filter(models.HealthEvent.date <= date_to)
+
+    sick_animals = [dict(row._mapping) for row in q.all()]
+    return {
+        "total_sick": len(sick_animals),
+        "sick_animals": sick_animals,
+    }
+
+
+@router.get("/health-report")
+def health_report(
+    date_from: str = Query(None),
+    date_to: str = Query(None),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns:
+      - total_sick: number of animals with health events
+      - sick_animals: list of livestock with disease info (if available)
+    """
+    q = (
+        db.query(
+            models.Livestock.id.label("livestock_id"),
+            models.Livestock.tag_number.label("tag_number"),
+            models.Species.name.label("species"),
+            models.Owner.name.label("owner"),
+            models.Disease.name.label("disease"),
+            models.HealthEvent.date.label("event_date"),
+            models.HealthEvent.notes.label("notes"),
+        )
+        .join(models.HealthEvent, models.HealthEvent.livestock_id == models.Livestock.id)
+        .outerjoin(models.Disease, models.HealthEvent.disease_id == models.Disease.id)  # 👈 outer join, disease optional
+        .join(models.Species, models.Livestock.species_id == models.Species.id)
+        .join(models.Owner, models.Livestock.owner_id == models.Owner.id)
+    )
+
+    if date_from:
+        q = q.filter(models.HealthEvent.date >= date_from)
+    if date_to:
+        q = q.filter(models.HealthEvent.date <= date_to)
+
+    animals = [dict(row._mapping) for row in q.all()]
+
+    return {
+        "total_sick": len(animals),
+        "sick_animals": animals,
+    }
+@router.get("/health-report")
+def health_report(
+    date_from: str = Query(None),
+    date_to: str = Query(None),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns:
+      - total_sick: number of animals with health events
+      - sick_animals: list of livestock with disease info (if available)
+    """
+    q = (
+        db.query(
+            models.Livestock.id.label("livestock_id"),
+            models.Livestock.tag_number.label("tag_number"),
+            models.Species.name.label("species"),
+            models.Owner.name.label("owner"),
+            models.Disease.name.label("disease"),
+            models.HealthEvent.date.label("event_date"),
+            models.HealthEvent.notes.label("notes"),
+        )
+        .join(models.HealthEvent, models.HealthEvent.livestock_id == models.Livestock.id)
+        .outerjoin(models.Disease, models.HealthEvent.disease_id == models.Disease.id)  # 👈 outer join, disease optional
+        .join(models.Species, models.Livestock.species_id == models.Species.id)
+        .join(models.Owner, models.Livestock.owner_id == models.Owner.id)
+    )
+
+    if date_from:
+        q = q.filter(models.HealthEvent.date >= date_from)
+    if date_to:
+        q = q.filter(models.HealthEvent.date <= date_to)
+
+    animals = [dict(row._mapping) for row in q.all()]
+
+    return {
+        "total_sick": len(animals),
+        "sick_animals": animals,
+    }

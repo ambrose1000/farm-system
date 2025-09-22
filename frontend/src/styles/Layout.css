@@ -1,11 +1,16 @@
-.app-layout {
+.layout {
   display: flex;
   min-height: 100vh;
 }
 
 .main-content {
-  margin-left: 220px; /* width of sidebar */
-  padding: 20px;
-  flex: 1;
-  background: #f9f9f9;
+  flex: 1;                  /* take remaining space */
+  margin-left: 240px;        /* same as sidebar width */
+  padding: 1rem;
+  background-color: #f4f7f6;
+  transition: margin-left 0.3s;
+}
+
+.sidebar.collapsed + .main-content {
+  margin-left: 60px;        /* adjust when sidebar collapses */
 }

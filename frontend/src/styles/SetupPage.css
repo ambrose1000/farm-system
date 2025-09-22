@@ -10,18 +10,17 @@
 
 .setup-content {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 1fr 3fr; /* left form smaller, right table bigger */
   gap: 20px;
   align-items: start;
 }
 
-/* Form styling */
+/* Optional: make the form scrollable vertically if it's too long */
 .setup-form {
-  background: #f9f9f9;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
+  max-height: 80vh;
+  overflow-y: auto;
 }
+
 
 .setup-form .form-group {
   margin-bottom: 12px;
@@ -100,4 +99,53 @@
 .setup-table button:last-of-type {
   background: #dc3545;
   color: white;
+}
+.setup-table {
+  overflow-x: auto; /* keeps table responsive */
+  max-height: 80vh; /* prevent it from overflowing vertically */
+}
+
+.setup-table table {
+  min-width: 800px; /* ensures all columns fit */
+}
+.setup-title {
+  color: #5a3e2b; /* dark brown title */
+}
+
+.form-actions button[type="submit"] {
+  background: #a67c52; /* brownish submit */
+  color: white;
+}
+
+.form-actions button[type="button"] {
+  background: #edd9b0; /* light cream cancel */
+  color: #1a1a1a;
+}
+
+.setup-table th {
+  background: #c19a6b; /* brown header */
+  color: #fff;
+}
+
+.setup-table tr:nth-child(even) {
+  background: #f5f0e6; /* soft beige */
+}
+
+.setup-table tr:hover {
+  background: #e0c79b; /* darker highlight on hover */
+}
+
+.setup-table button:first-of-type {
+  background: #c19a6b;
+  color: white;
+}
+
+.setup-table button:last-of-type {
+  background: #a67c52;
+  color: white;
+}
+.setup-table th,
+.setup-table td {
+  padding: 12px 14px;
+  border-radius: 4px;
 }

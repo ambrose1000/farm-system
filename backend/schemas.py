@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr , model_validator
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 
 class UserCreate(BaseModel):
     username: str
@@ -92,8 +92,129 @@ class LivestockCreate(LivestockBase):
     pass
 
 
-class LivestockResponse(LivestockBase):
+class LivestockResponse(BaseModel):
+    id: int
+    tag_number: str
+    species_id: int
+    category_id: int
+    owner_id: int
+    location_id: int
+    sex: str
+    dob: date
+    castrated: bool
+    status: str
+    event_type: Optional[str] = None
+    event_date: Optional[date] = None
+    purchase_id: Optional[int] = None   # NEW
+
+    class Config:
+        orm_mode = True
+
+
+# ------------------ Diseases ------------------ #
+class DiseaseBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+class DiseaseCreate(DiseaseBase):
+    pass
+
+
+class DiseaseUpdate(DiseaseBase):
+    pass
+
+
+class Disease(DiseaseBase):
     id: int
 
     class Config:
         orm_mode = True
+
+
+# ------------------ Medications ------------------ #
+class MedicationBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    dosage: Optional[str] = None
+
+class MedicationCreate(MedicationBase):
+    pass
+
+class MedicationUpdate(MedicationBase):
+    pass
+
+class MedicationResponse(MedicationBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+# ------------------ Vets ------------------ #
+class VetBase(BaseModel):
+    name: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+
+class VetCreate(VetBase):
+    pass
+
+class VetUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+
+class VetResponse(VetBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class HealthEventTypeBase(BaseModel):
+    name: str
+    description: str | None = None
+
+
+class HealthEventTypeCreate(HealthEventTypeBase):
+    pass
+
+
+class HealthEventTypeUpdate(HealthEventTypeBase):
+    pass
+
+
+class HealthEventType(HealthEventTypeBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+# schemas.py
+
+
+
+class HealthEventBase(BaseModel):
+    date: date
+    livestock_id: int
+    event_type_id: int
+    disease_id: Optional[int] = None
+    medication_id: Optional[int] = None
+    vet_id: Optional[int] = None
+    notes: Optional[str] = None
+
+class HealthEventCreate(HealthEventBase):
+    pass
+
+class HealthEventUpdate(HealthEventBase):
+    pass
+
+class HealthEvent(HealthEventBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+

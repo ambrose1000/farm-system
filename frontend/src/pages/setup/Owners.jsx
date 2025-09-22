@@ -176,8 +176,8 @@ function Owners() {
                   <td>{o.email}</td>
                   <td>{o.address}</td>
                   <td>
-                    <button onClick={() => handleEdit(o)}>Edit</button>
-                    <button onClick={() => handleDelete(o.id)}>Delete</button>
+                    <button  className="edit-btn" onClick={() => handleEdit(o)}>Edit</button>
+                    <button  className="delete-btn" onClick={() => handleDelete(o.id)}>Delete</button>
                   </td>
                 </tr>
               ))

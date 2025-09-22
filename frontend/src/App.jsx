@@ -11,6 +11,14 @@ import Types from "./pages/setup/Types";
 import Categories from "./pages/setup/Categories";
 import Locations from "./pages/setup/Locations";
 import Owners from "./pages/setup/Owners";
+import Diseases from "./pages/health/Diseases";
+import Medications from "./pages/health/Medications";
+import Vets from "./pages/health/Vets";
+import EventTypes from "./pages/health/EventTypes";
+import HealthSetup from "./pages/health/HealthSetup"; 
+import ReportsDashboard from "./pages/reports/ReportsDashboard";
+import HealthReport from "./pages/reports/HealthReport"; 
+
 
 
 
@@ -27,6 +35,7 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout />
+
           </ProtectedRoute>
         }
       >
@@ -39,8 +48,16 @@ function App() {
      <Route path="/setup/categories" element={<Categories />} />
       <Route path="/setup/locations" element={<Locations />} />
       <Route path="/setup/Owners" element={<Owners />} />
+      <Route path="/health/diseases" element={<Diseases  />} />
+      // inside protected routes
+<Route path="/health/medications" element={<Medications />} />
+<Route path="/health/vets" element={<Vets />} />
+  <Route path="/health/eventtypes" element={<EventTypes />} />   
+  <Route path="/health/healthsetup" element={<HealthSetup />} />
 
-       
+ <Route path="/reports" element={<ReportsDashboard />} />
+ <Route path="/reports/healthreport" element={<HealthReport />} />
+
       </Route>
     </Routes>
   );

@@ -159,8 +159,8 @@ function Categories() {
                     <td>{c.name}</td>
                     <td>{typeName}</td>
                     <td>
-                      <button onClick={() => handleEdit(c)}>Edit</button>
-                      <button onClick={() => handleDelete(c.id)}>Delete</button>
+                      <button  className="edit-btn" onClick={() => handleEdit(c)}>Edit</button>
+                      <button  className="delete-btn" onClick={() => handleDelete(c.id)}>Delete</button>
                     </td>
                   </tr>
                 );

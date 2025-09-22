@@ -263,8 +263,8 @@ function Livestock() {
             <td>{l.status}</td>
             <td>{l.event_type} {l.event_date ? `(${l.event_date})` : ""}</td>
             <td>
-              <button onClick={() => handleEdit(l)}>Edit</button>
-              <button onClick={() => handleDelete(l.id)}>Delete</button>
+              <button  className="edit-btn"  onClick={() => handleEdit(l)}>Edit</button>
+              <button   className="delete-btn" onClick={() => handleDelete(l.id)}>Delete</button>
             </td>
           </tr>
         ))}

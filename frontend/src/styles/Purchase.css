@@ -1,7 +1,0 @@
-/* Reuse setup styles */
-@import "./SetupPage.css";
-
-.setup-form h3,
-.setup-table h3 {
-  margin-bottom: 12px;
-}

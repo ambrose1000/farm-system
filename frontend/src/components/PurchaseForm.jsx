@@ -1,195 +1,294 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function PurchaseForm({ onAddPurchase }) {
-  const [formData, setFormData] = useState({
-    reference: "",
-    date: "",
-    vendor: "",
-    total_cost: "",
-    animals: []
-  });
+export default function PurchaseForm({ onPurchaseSaved, selectedPurchase }) {
+  const [vendors, setVendors] = useState([]);
+  const [species, setSpecies] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [owners, setOwners] = useState([]);
+  const [locations, setLocations] = useState([]);
+
+  const [vendorId, setVendorId] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState("");
+  const [totalCost, setTotalCost] = useState("");
+  const [notes, setNotes] = useState("");
 
   const [animal, setAnimal] = useState({
     tag_number: "",
     species_id: "",
     category_id: "",
+    owner_id: "",
+    location_id: "",
     sex: "",
     dob: "",
-    purchase_price: ""
+    price: "",
+    notes: "",
   });
 
-  // handle form fields
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const [animals, setAnimals] = useState([]);
 
-  const handleAnimalChange = (e) => {
-    setAnimal({ ...animal, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    axios.get("http://localhost:8000/vendors").then((res) => setVendors(res.data));
+    axios.get("http://localhost:8000/species").then((res) => setSpecies(res.data));
+    axios.get("http://localhost:8000/categories").then((res) => setCategories(res.data));
+    axios.get("http://localhost:8000/owners").then((res) => setOwners(res.data));
+    axios.get("http://localhost:8000/locations").then((res) => setLocations(res.data));
+  }, []);
 
-  const addAnimal = () => {
-    if (!animal.tag_number || !animal.species_id) {
-      alert("Tag number and species are required.");
+  // ➕ Add animal to list
+  const handleAddAnimal = () => {
+    if (!animal.tag_number || !animal.price) {
+      alert("Please fill required animal fields (tag number and price).");
       return;
     }
-    setFormData({ ...formData, animals: [...formData.animals, animal] });
+    setAnimals([...animals, animal]);
     setAnimal({
       tag_number: "",
       species_id: "",
       category_id: "",
+      owner_id: "",
+      location_id: "",
       sex: "",
       dob: "",
-      purchase_price: ""
+      price: "",
+      notes: "",
     });
   };
 
+  // 🧾 Submit purchase
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!animals.length) {
+      alert("Please add at least one animal before saving the purchase.");
+      return;
+    }
+
+    const payload = {
+      vendor_id: String(vendorId),
+      purchase_date: purchaseDate,
+      total_cost: Number(totalCost) || 0,
+      notes: notes || "",
+      items: animals.map((a) => ({
+        tag_number: a.tag_number || "",
+        species_id: Number(a.species_id) || 0,
+        category_id: Number(a.category_id) || 0,
+        owner_id: Number(a.owner_id) || 0,
+        location_id: Number(a.location_id) || 0,
+        sex: a.sex || "",
+        dob: a.dob || new Date().toISOString().split("T")[0],
+        price: Number(a.price) || 0,
+        notes: a.notes || "",
+      })),
+    };
+
     try {
-      const res = await axios.post("http://localhost:8000/purchases/", formData);
-      onAddPurchase(res.data);
-      setFormData({ reference: "", date: "", vendor: "", total_cost: "", animals: [] });
+      await axios.post("http://localhost:8000/purchases/", payload);
+
+      // Reset form
+      setVendorId("");
+      setPurchaseDate("");
+      setTotalCost("");
+      setNotes("");
+      setAnimals([]);
+
+      if (onPurchaseSaved) onPurchaseSaved();
+      alert("✅ Purchase and livestock saved successfully!");
     } catch (err) {
-      console.error("Error creating purchase:", err);
+      console.error("Error saving purchase:", err.response?.data || err);
+      alert("❌ Failed to save purchase. Check console for details.");
     }
   };
 
   return (
-    <form className="setup-form" onSubmit={handleSubmit}>
-      <h3>New Purchase</h3>
+    <div className="flex justify-center items-start p-6">
+      <form onSubmit={handleSubmit} className="card w-full max-w-3xl">
+        <h2 className="text-2xl font-semibold text-[#5b4636] mb-6 text-center">
+          {selectedPurchase ? "✏️ Edit Purchase" : "🧾 Add New Purchase"}
+        </h2>
 
-      <div className="form-group">
-        <label>Reference</label>
-        <input
-          type="text"
-          name="reference"
-          value={formData.reference}
-          onChange={handleChange}
-          required
-        />
-      </div>
+        {/* 🟫 Purchase Details */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-[#5b4636] mb-3">Purchase Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="form-label">Vendor</label>
+              <select
+                className="form-select"
+                value={vendorId}
+                onChange={(e) => setVendorId(e.target.value)}
+                required
+              >
+                <option value="">Select Vendor</option>
+                {vendors.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      <div className="form-group">
-        <label>Date</label>
-        <input
-          type="date"
-          name="date"
-          value={formData.date}
-          onChange={handleChange}
-          required
-        />
-      </div>
+            <div>
+              <label className="form-label">Purchase Date</label>
+              <input
+                type="date"
+                className="form-input"
+                value={purchaseDate}
+                onChange={(e) => setPurchaseDate(e.target.value)}
+                required
+              />
+            </div>
 
-      <div className="form-group">
-        <label>Vendor</label>
-        <input
-          type="text"
-          name="vendor"
-          value={formData.vendor}
-          onChange={handleChange}
-          required
-        />
-      </div>
+            <div>
+              <label className="form-label">Total Cost</label>
+              <input
+                type="number"
+                className="form-input"
+                placeholder="Total Cost"
+                value={totalCost}
+                onChange={(e) => setTotalCost(e.target.value)}
+                required
+              />
+            </div>
+          </div>
 
-      <div className="form-group">
-        <label>Total Cost</label>
-        <input
-          type="number"
-          step="0.01"
-          name="total_cost"
-          value={formData.total_cost}
-          onChange={handleChange}
-          required
-        />
-      </div>
+          <div className="mt-4">
+            <label className="form-label">Notes</label>
+            <textarea
+              className="form-textarea"
+              placeholder="Notes..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+        </div>
 
-      {/* Animals section */}
-      <h4>Animals</h4>
-      <div className="animal-form">
-        <input
-          type="text"
-          name="tag_number"
-          placeholder="Tag Number"
-          value={animal.tag_number}
-          onChange={handleAnimalChange}
-        />
-        <input
-          type="text"
-          name="species_id"
-          placeholder="Species ID"
-          value={animal.species_id}
-          onChange={handleAnimalChange}
-        />
-        <input
-          type="text"
-          name="category_id"
-          placeholder="Category ID"
-          value={animal.category_id}
-          onChange={handleAnimalChange}
-        />
-        <select name="sex" value={animal.sex} onChange={handleAnimalChange}>
-          <option value="">Sex</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
-        <input
-          type="date"
-          name="dob"
-          value={animal.dob}
-          onChange={handleAnimalChange}
-        />
-        <input
-          type="number"
-          step="0.01"
-          name="purchase_price"
-          placeholder="Price"
-          value={animal.purchase_price}
-          onChange={handleAnimalChange}
-        />
-        <button type="button" onClick={addAnimal}>
-          Add Animal
-        </button>
-      </div>
+        {/* 🟩 Animal Section */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-[#5b4636] mb-3">Animal Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Tag Number"
+              value={animal.tag_number}
+              onChange={(e) => setAnimal({ ...animal, tag_number: e.target.value })}
+            />
 
-      {formData.animals.length > 0 && (
-        <table className="mini-table">
-          <thead>
-            <tr>
-              <th>Tag</th>
-              <th>Species</th>
-              <th>Category</th>
-              <th>Sex</th>
-              <th>DOB</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            {formData.animals.map((a, index) => (
-              <tr key={index}>
-                <td>{a.tag_number}</td>
-                <td>{a.species_id}</td>
-                <td>{a.category_id}</td>
-                <td>{a.sex}</td>
-                <td>{a.dob}</td>
-                <td>{a.purchase_price}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            <select
+              className="form-select"
+              value={animal.species_id}
+              onChange={(e) => setAnimal({ ...animal, species_id: e.target.value })}
+            >
+              <option value="">Select Species</option>
+              {species.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
 
-      <div className="form-actions">
-        <button type="submit">Save Purchase</button>
-        <button
-          type="button"
-          onClick={() =>
-            setFormData({ reference: "", date: "", vendor: "", total_cost: "", animals: [] })
-          }
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+            <select
+              className="form-select"
+              value={animal.category_id}
+              onChange={(e) => setAnimal({ ...animal, category_id: e.target.value })}
+            >
+              <option value="">Select Category</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="form-select"
+              value={animal.owner_id}
+              onChange={(e) => setAnimal({ ...animal, owner_id: e.target.value })}
+            >
+              <option value="">Select Owner</option>
+              {owners.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="form-select"
+              value={animal.location_id}
+              onChange={(e) => setAnimal({ ...animal, location_id: e.target.value })}
+            >
+              <option value="">Select Location</option>
+              {locations.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="form-select"
+              value={animal.sex}
+              onChange={(e) => setAnimal({ ...animal, sex: e.target.value })}
+            >
+              <option value="">Sex</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+
+            <input
+              type="date"
+              className="form-input"
+              value={animal.dob}
+              onChange={(e) => setAnimal({ ...animal, dob: e.target.value })}
+            />
+
+            <input
+              type="number"
+              className="form-input"
+              placeholder="Price"
+              value={animal.price}
+              onChange={(e) => setAnimal({ ...animal, price: e.target.value })}
+            />
+
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Animal Notes"
+              value={animal.notes}
+              onChange={(e) => setAnimal({ ...animal, notes: e.target.value })}
+            />
+          </div>
+
+          <div className="mt-4 text-right">
+            <button type="button" className="btn" onClick={handleAddAnimal}>
+              ➕ Add Animal
+            </button>
+          </div>
+        </div>
+
+        {/* 🧾 Animals Added */}
+        {animals.length > 0 && (
+          <div className="mb-6">
+            <h4 className="text-lg font-semibold text-[#5b4636] mb-2">Animals Added</h4>
+            <ul className="bg-[#f3ede4] rounded-lg p-3 border border-[#e6d8c3]">
+              {animals.map((a, i) => (
+                <li key={i} className="py-1 border-b border-[#e6d8c3] last:border-none">
+                  <span className="font-medium">{a.tag_number}</span> — {a.sex}, {a.price} KES
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Submit */}
+        <div className="text-center">
+          <button type="submit" className="btn w-full">
+            {selectedPurchase ? "Update Purchase" : "Save Purchase"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

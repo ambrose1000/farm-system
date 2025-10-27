@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🌿 Global farm system theme */
+@layer base {
+  body {
+    @apply bg-[#f7f3ef] text-[#3b2e1e] font-sans;
+  }
+}
+
+/* 🧩 Reusable components */
+@layer components {
+  /* Card container for forms and panels */
+  .card {
+    @apply bg-white rounded-2xl shadow-md border border-[#e6d8c3] p-6;
+  }
+
+  /* Form styling */
+  .form-label {
+    @apply block text-sm font-medium text-[#5b4636] mb-1;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    @apply w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-[#c5a46d] focus:border-[#c5a46d];
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-block bg-[#c5a46d] hover:bg-[#b48b4e] text-white font-semibold py-2 px-4 rounded-lg transition;
+  }
+
+  .btn-outline {
+    @apply inline-block border border-[#c5a46d] text-[#5b4636] hover:bg-[#c5a46d] hover:text-white font-semibold py-2 px-4 rounded-lg transition;
+  }
+
+  /* Tables */
+  .table {
+    @apply w-full border-collapse border border-[#e6d8c3] rounded-lg overflow-hidden shadow-sm;
+  }
+
+  .table th {
+    @apply bg-[#c5a46d] text-white text-left px-3 py-2 font-medium;
+  }
+
+  .table td {
+    @apply border-t border-[#e6d8c3] px-3 py-2;
+  }
+
+  .table tr:hover {
+    @apply bg-[#f3ede4];
+  }
+}

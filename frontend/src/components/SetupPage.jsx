@@ -1,18 +1,22 @@
 // src/components/SetupPage.jsx
 import React from "react";
-import "../styles/SetupPage.css";
+
 function SetupPage({ title, form, table }) {
   return (
-    <div className="setup-container">
-      <h2 className="setup-title">{title}</h2>
-      <div className="setup-content">
-        {/* Left: Form */}
-        <div className="setup-form">{form}</div>
+   <div className="p-6 w-full bg-gray-300">
+  <h2 className="text-2xl font-semibold mb-6">{title}</h2>
 
-        {/* Right: Table */}
-        <div className="setup-table">{table}</div>
-      </div>
-    </div>
+  {/* Form on top */}
+  <div className="mb-8 bg-white p-6 rounded-xl shadow border border-gray-200">
+    {form}
+  </div>
+
+  {/* Table below */}
+  <div className="overflow-x-auto bg-white p-6 rounded-xl shadow border border-gray-200">
+    {table}
+  </div>
+</div>
+
   );
 }
 

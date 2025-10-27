@@ -22,13 +22,9 @@ function Livestock() {
       sex: "Male",
       dob: "",
       castrated: false,
-      status: "Active",
-      event_type: "",
-      event_date: "",
     };
   }
 
-  // --- Load dropdown + table data ---
   useEffect(() => {
     fetch("http://localhost:8000/species").then(r => r.json()).then(setSpecies);
     fetch("http://localhost:8000/categories").then(r => r.json()).then(setCategories);
@@ -43,7 +39,6 @@ function Livestock() {
       .then(setLivestock);
   };
 
-  // --- Form handlers ---
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -95,7 +90,6 @@ function Livestock() {
     setFormData({
       ...row,
       dob: row.dob ? row.dob.split("T")[0] : "",
-      event_date: row.event_date ? row.event_date.split("T")[0] : "",
     });
     setEditingId(row.id);
   };
@@ -108,9 +102,8 @@ function Livestock() {
       .catch((err) => console.error("Delete failed:", err));
   };
 
-  // --- Form JSX ---
   const form = (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="form-group">
         <label>Tag Number</label>
         <input
@@ -174,102 +167,94 @@ function Livestock() {
 
       <div className="form-group">
         <label>Date of Birth</label>
+        <input type="date" name="dob" value={formData.dob} onChange={handleChange} />
+      </div>
+
+      <div className="flex items-center space-x-2">
         <input
-          type="date"
-          name="dob"
-          value={formData.dob}
+          type="checkbox"
+          name="castrated"
+          checked={formData.castrated}
           onChange={handleChange}
         />
+        <label>Castrated</label>
       </div>
 
-      <div className="form-group">
-        <label>
-          <input
-            type="checkbox"
-            name="castrated"
-            checked={formData.castrated}
-            onChange={handleChange}
-          />
-          Castrated
-        </label>
-      </div>
-
-      <div className="form-group">
-        <label>Status</label>
-        <select name="status" value={formData.status} onChange={handleChange}>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label>Event Type</label>
-        <input
-          type="text"
-          name="event_type"
-          value={formData.event_type}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label>Event Date</label>
-        <input
-          type="date"
-          name="event_date"
-          value={formData.event_date}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-actions">
-        <button type="submit">{editingId ? "Update" : "Save"}</button>
-        <button type="button" onClick={() => { setFormData(initialForm()); setEditingId(null); }}>
+      <div className="flex space-x-3 pt-4">
+        <button
+          type="submit"
+          className="bg-[#c5a46d] text-white px-5 py-2 rounded-md hover:bg-[#b8965f] transition"
+        >
+          {editingId ? "Update" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setFormData(initialForm());
+            setEditingId(null);
+          }}
+          className="bg-gray-300 text-gray-800 px-5 py-2 rounded-md hover:bg-gray-400 transition"
+        >
           Cancel
         </button>
       </div>
     </form>
   );
 
-  // --- Table JSX ---
   const table = (
-    <table>
-      <thead>
-        <tr>
-          <th>Tag #</th>
-          <th>Species</th>
-          <th>Category</th>
-          <th>Owner</th>
-          <th>Location</th>
-          <th>Sex</th>
-          <th>DOB</th>
-          <th>Castrated</th>
-          <th>Status</th>
-          <th>Event</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {livestock.map(l => (
-          <tr key={l.id}>
-            <td>{l.tag_number}</td>
-            <td>{species.find(s => s.id === l.species_id)?.name}</td>
-            <td>{categories.find(c => c.id === l.category_id)?.name}</td>
-            <td>{owners.find(o => o.id === l.owner_id)?.name}</td>
-            <td>{locations.find(lo => lo.id === l.location_id)?.name}</td>
-            <td>{l.sex}</td>
-            <td>{l.dob}</td>
-            <td>{l.castrated ? "Yes" : "No"}</td>
-            <td>{l.status}</td>
-            <td>{l.event_type} {l.event_date ? `(${l.event_date})` : ""}</td>
-            <td>
-              <button  className="edit-btn"  onClick={() => handleEdit(l)}>Edit</button>
-              <button   className="delete-btn" onClick={() => handleDelete(l.id)}>Delete</button>
-            </td>
+    <div className="overflow-x-auto mt-6">
+      <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+        <thead className="bg-[#c5a46d] text-white">
+          <tr>
+            <th className="py-3 px-4 text-left">Tag #</th>
+            <th className="py-3 px-4 text-left">Species</th>
+            <th className="py-3 px-4 text-left">Category</th>
+            <th className="py-3 px-4 text-left">Owner</th>
+            <th className="py-3 px-4 text-left">Location</th>
+            <th className="py-3 px-4 text-left">Sex</th>
+            <th className="py-3 px-4 text-left">DOB</th>
+            <th className="py-3 px-4 text-left">Castrated</th>
+            <th className="py-3 px-4 text-left">Actions</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {livestock.length > 0 ? (
+            livestock.map((l) => (
+              <tr key={l.id} className="hover:bg-gray-50">
+                <td className="py-2 px-4">{l.tag_number}</td>
+                <td className="py-2 px-4">{species.find(s => s.id === l.species_id)?.name}</td>
+                <td className="py-2 px-4">{categories.find(c => c.id === l.category_id)?.name}</td>
+                <td className="py-2 px-4">{owners.find(o => o.id === l.owner_id)?.name}</td>
+                <td className="py-2 px-4">{locations.find(lo => lo.id === l.location_id)?.name}</td>
+                <td className="py-2 px-4">{l.sex}</td>
+                <td className="py-2 px-4">{l.dob}</td>
+                <td className="py-2 px-4">{l.castrated ? "Yes" : "No"}</td>
+                <td className="py-2 px-4 space-x-2">
+                  <button
+                    onClick={() => handleEdit(l)}
+                    className="text-[#c5a46d] hover:underline"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(l.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="9" className="py-3 text-center text-gray-500">
+                No livestock records found.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 
   return <SetupPage title="Livestock Registration" form={form} table={table} />;

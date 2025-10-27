@@ -7,11 +7,15 @@ import models, schemas, database, auth
 from auth import get_current_user, TokenData
 import crud_livestock
 from routers import reports
-from routers import locations, owners, categories, species, livestock
+from routers import locations, owners, vendors, categories, species, livestock
 from routers.health import diseases, medications, vets, event_types, events, healthreports
-
+from routers import purchase
+from routers import births , sales  ,buyers,sale_items, livestock_events,exit_router, farm    
+from routers import inventory, livestock_history,inventory_setup,purchase_orders,inventory_receipts, stores
 
 # --- Create tables ---
+
+
 models.Base.metadata.create_all(bind=database.engine)
 
 
@@ -81,7 +85,10 @@ def get_livestock(db: Session = Depends(get_db)):
 
 app.include_router(locations.router, prefix="/locations", tags=["Locations"])
 # Include the router
+app.include_router(farm.router)
 app.include_router(owners.router)
+app.include_router(vendors.router)
+app.include_router(buyers.router)
 
 app.include_router(categories.router)
 
@@ -89,6 +96,7 @@ app.include_router(categories.router)
 app.include_router(species.router)
 
 app.include_router(livestock.router)
+app.include_router(livestock_events.router)
 
 # include health routers
 app.include_router(diseases.router)
@@ -98,6 +106,18 @@ app.include_router(event_types.router)
 app.include_router(events.router)
 app.include_router(healthreports.router)
 
+
+app.include_router(purchase.router)
+app.include_router(purchase_orders.router)
+app.include_router(births.router)
+app.include_router(sales.router)
+app.include_router(sale_items.router)
+app.include_router(exit_router.router)
+app.include_router(inventory_setup.router)
+app.include_router(inventory.router)
+app.include_router(inventory_receipts.router)
+app.include_router(inventory_receipts.router)
+app.include_router(stores.router)
 
 # --- Include routers ---
 app.include_router(reports.router)

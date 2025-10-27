@@ -1,12 +1,10 @@
-// src/components/Sidebar.jsx
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import "../styles/Sidebar.css";
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(null);
-  const [collapsed, setCollapsed] = useState(false); // new state
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -18,201 +16,231 @@ export default function Sidebar() {
   };
 
   return (
-    <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
-      <div className="sidebar-header">
-        {!collapsed && <h2>Farm System</h2>}
-        <button className="collapse-btn" onClick={() => setCollapsed(!collapsed)}>
+    <aside
+      className={`fixed left-0 top-0 h-screen flex flex-col border-r border-green-800 shadow-md transition-all duration-300 z-40 ${
+        collapsed ? "w-20" : "w-64"
+      } bg-gradient-to-b from-lime-100 via-amber-100 to-green-100`}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-green-800 bg-green-200 shadow-sm">
+        {!collapsed && (
+          <h2 className="text-lg font-bold text-green-900 tracking-wide">
+            🌾 Berkley Farm
+          </h2>
+        )}
+        <button
+          className="text-green-800 hover:text-green-950 text-xl font-bold focus:outline-none"
+          onClick={() => setCollapsed(!collapsed)}
+        >
           {collapsed ? "→" : "←"}
         </button>
       </div>
 
-      <nav className="sidebar-nav">
-        <ul>
-          {/* Dashboard */}
-          <li>
-            <NavLink to="/dashboard" end className={({ isActive }) => (isActive ? "active" : "")}>
-              Dashboard
-            </NavLink>
-          </li>
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto p-3">
+        <ul className="space-y-2">
 
-          {/* Livestock Registration */}
-          <li>
-            <button className="dropdown-btn" onClick={() => toggleMenu("registration")}>
-              Livestock Registration ▾
-            </button>
-            {openMenu === "registration" && (
-              <ul className="dropdown">
-                <li>
-                  <NavLink to="/livestock" end className={({ isActive }) => (isActive ? "active" : "")}>
-                    Register Livestock
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/livestocktable" end className={({ isActive }) => (isActive ? "active" : "")}>
-                    View Livestock
-                  </NavLink>
-                </li>
-              </ul>
-            )}
-          </li>
+          {/* === MAIN SECTION === */}
+          {!collapsed && (
+            <h3 className="text-xs uppercase font-bold text-green-800 tracking-wider mt-3 mb-1">
+              Main
+            </h3>
+          )}
+          <SidebarLink to="/dashboard" label="Dashboard" icon="📊" collapsed={collapsed} />
 
-          {/* Livestock Setup */}
-          <li>
-            <button className="dropdown-btn" onClick={() => toggleMenu("setup")}>
-              Livestock Setup ▾
-            </button>
-            {openMenu === "setup" && (
-              <ul className="dropdown">
-                <li>
-                  <NavLink to="/setup/types" end className={({ isActive }) => `block hover:text-yellow-400 ${isActive ? "text-yellow-400 font-bold" : ""}`}>
-                    Type of Livestock
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/setup/categories" end className={({ isActive }) => (isActive ? "active" : "")}>
-                    Categories
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/setup/locations" end className={({ isActive }) => (isActive ? "active" : "")}>
-                    Locations
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/setup/owners" end className={({ isActive }) => (isActive ? "active" : "")}>
-                    Owners
-                  </NavLink>
-                </li>
-              </ul>
-            )}
-          </li>
+          <hr className="border-green-300 my-2" />
 
-          {/* Livestock Management */}
-          <li>
-            <button className="dropdown-btn" onClick={() => toggleMenu("management")}>
-              Livestock Management ▾
-            </button>
-            {openMenu === "management" && (
-              <ul className="dropdown">
-                <li>
-                  <NavLink to="/management/purchasepage" end className={({ isActive }) => (isActive ? "active" : "")}>
-                    Purchase
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/management/birth" end className={({ isActive }) => (isActive ? "active" : "")}>
-                    Birth
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/management/sale" end className={({ isActive }) => (isActive ? "active" : "")}>
-                    Sales
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/management/death" end className={({ isActive }) => (isActive ? "active" : "")}>
-                    Death
-                  </NavLink>
-                </li>
-              </ul>
-            )}
-          </li>
+          {/* === LIVESTOCK MANAGEMENT === */}
+          {!collapsed && (
+            <h3 className="text-xs uppercase font-bold text-green-800 tracking-wider mt-3 mb-1">
+              Livestock Management
+            </h3>
+          )}
+          <SidebarDropdown
+            title="🐮 Livestock Management"
+            menu="livestock"
+            openMenu={openMenu}
+            toggleMenu={toggleMenu}
+            collapsed={collapsed}
+            items={[
+              ["Livestock Registration", "/livestock"],
+              ["Purchase", "/management/purchase"],
+              ["Births", "/management/birth"],
+              ["Sales", "/management/sales"],
+              ["Exit", "/management/exit"],
+              ["Health", "/health/healthsetup"],
+            ]}
+          />
 
-{/* Livestock Health */}
-<li>
-  <button
-    className="dropdown-btn"
-    onClick={() => toggleMenu("health")}
-  >
-    Livestock Health ▾
-  </button>
-  {openMenu === "health" && (
-    <ul className="dropdown">
-      <li>
-        <NavLink to="/health/diseases" end className={({ isActive }) => (isActive ? "active" : "")}>
-          Diseases
-        </NavLink>
-      </li>
-      <li>
-        <NavLink to="/health/medications" end className={({ isActive }) => (isActive ? "active" : "")}>
-          Medications
-        </NavLink>
-      </li>
-      <li>
-        <NavLink to="/health/vets" end className={({ isActive }) => (isActive ? "active" : "")}>
-          Veterinarians
-        </NavLink>
-      </li>
-      <li>
-        <NavLink to="/health/eventtypes" end className={({ isActive }) => (isActive ? "active" : "")}>
-          Health Event Types
-        </NavLink>
-      </li>
-     
-      <li>
-        <NavLink to="/health/records" end className={({ isActive }) => (isActive ? "active" : "")}>
-          Health Records
-        </NavLink>
-      </li> <li>
-        <NavLink to="/health/healthsetup" end className={({ isActive }) => (isActive ? "active" : "")}>
-         Heath Event
-        </NavLink>
-      </li>
-    </ul>
-  )}
-</li>
+          <hr className="border-green-300 my-2" />
+           {/* === LIVESTOCK MANAGEMENT === */}
+          {!collapsed && (
+            <h3 className="text-xs uppercase font-bold text-green-800 tracking-wider mt-3 mb-1">
+              Inventory Management
+            </h3>
+          )}
+          <SidebarDropdown
+            title="🐮 Inventory Management"
+            menu="inventory"
+            openMenu={openMenu}
+            toggleMenu={toggleMenu}
+            collapsed={collapsed}
+            items={[
+             
+              ["InventoryTypes", "/inventory/types"],
+              ["Units Of Measure", "/inventory/units"],
+              ["Define Stores", "/inventory/stores"],
+              ["Create an Item", "/inventory/items"],
+              ["Create an LPO", "/inventory/orders"],
+              ["Receive Item  Items", "/inventory/goods"],
+              ["Issue an  Items", "/inventory/issuegoods"],
+            ]}
+          />
 
-{/* Reports */}
-<li>
-  <button
-    className="dropdown-btn"
-    onClick={() => toggleMenu("reports")}
-  >
-    Reports ▾
-  </button>
-  {openMenu === "reports" && (
-    <ul className="dropdown">
-      <li>
-        <NavLink
-          to="/reports"
-          end
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          Livestock Report
-        </NavLink>
-      </li>
-      <li>
-        <NavLink
-          to="/reports/healthreport"
-          end
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          Health Report
-        </NavLink>
-      </li>
-      <li>
-        <NavLink
-          to="/reports/birth-death"
-          end
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          Birth/Death Report
-        </NavLink>
-      </li>
-    </ul>
-  )}
-</li>
+          <hr className="border-green-300 my-2" />
 
+          {/* === CUSTOMERS & VENDORS === */}
+          {!collapsed && (
+            <h3 className="text-xs uppercase font-bold text-green-800 tracking-wider mt-3 mb-1">
+              Customers & Vendors
+            </h3>
+          )}
+          <SidebarDropdown
+            title="👥 Customer Management"
+            menu="customer"
+            openMenu={openMenu}
+            toggleMenu={toggleMenu}
+            collapsed={collapsed}
+            items={[
+              ["Customer Setup", "/buyers"],
+              ["Customer Management", "/customers/manage"],
+              ["Customer Reports", "/reports/buyer-history"],
+            ]}
+          />
+          <SidebarDropdown
+            title="🚚 Vendor Management"
+            menu="vendor"
+            openMenu={openMenu}
+            toggleMenu={toggleMenu}
+            collapsed={collapsed}
+            items={[
+              ["Vendor Setup", "/setup/vendors"],
+              ["Vendor Management", "/vendors/manage"],
+              ["Vendor Reports", "/vendors/reports"],
+            ]}
+          />
+
+          <hr className="border-green-300 my-2" />
+
+          {/* === REPORTS === */}
+          {!collapsed && (
+            <h3 className="text-xs uppercase font-bold text-green-800 tracking-wider mt-3 mb-1">
+              Reports
+            </h3>
+          )}
+          <SidebarDropdown
+            title="📋 Reports"
+            menu="reports"
+            openMenu={openMenu}
+            toggleMenu={toggleMenu}
+            collapsed={collapsed}
+            items={[
+              ["Livestock Report", "/reports"],
+              ["Health Report", "/reports/healthreport"],
+              ["Individual Livestock", "/reports/individualLivestock"],
+              ["Livestock History", "/reports/livestockHistory"],
+            ]}
+          />
+
+          <hr className="border-green-300 my-2" />
+
+          {/* === SETTINGS === */}
+          {!collapsed && (
+            <h3 className="text-xs uppercase font-bold text-green-800 tracking-wider mt-3 mb-1">
+              Settings
+            </h3>
+          )}
+          <SidebarDropdown
+            title="💊 Livestock Health Settings"
+            menu="healthsettings"
+            openMenu={openMenu}
+            toggleMenu={toggleMenu}
+            collapsed={collapsed}
+            items={[
+              ["Types of Diseases", "/health/diseases"],
+              ["Medicine Settings", "/health/medications"],
+              ["Health Event Types", "/health/eventtypes"],
+              ["Veterinary Settings", "/health/vets"],
+            ]}
+          />
+          <SidebarDropdown
+            title="⚙️ Livestock Settings"
+            menu="settings"
+            openMenu={openMenu}
+            toggleMenu={toggleMenu}
+            collapsed={collapsed}
+            items={[
+              ["Types of Livestock", "/setup/types"],
+              ["Livestock Categories", "/setup/categories"],
+              ["Homestead Locations", "/setup/locations"],
+              ["Livestock Owners", "/setup/owners"],
+            ]}
+          />
         </ul>
-
       </nav>
 
-      {/* Logout */}
-      <div className="sidebar-footer">
-        <button onClick={handleLogout} className="logout-btn">
-          Logout
+      {/* Footer */}
+      <div className="p-4 border-t border-green-800 bg-green-200">
+        <button
+          onClick={handleLogout}
+          className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-2 rounded-lg transition"
+        >
+          {!collapsed && "Logout"} {collapsed && "🚪"}
         </button>
       </div>
-    </div>
+    </aside>
+  );
+}
+
+/* ✅ Dropdown Component */
+function SidebarDropdown({ title, menu, openMenu, toggleMenu, items, collapsed }) {
+  return (
+    <li>
+      <button
+        className="w-full text-left px-3 py-2 rounded-lg text-green-900 hover:bg-green-200 font-semibold transition"
+        onClick={() => toggleMenu(menu)}
+      >
+        {title} {!collapsed && "▾"}
+      </button>
+      {openMenu === menu && !collapsed && (
+        <ul className="ml-4 mt-1 space-y-1 border-l border-green-300 pl-2">
+          {items.map(([label, path]) => (
+            <SidebarLink key={path} to={path} label={label} />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+/* ✅ Link Component */
+function SidebarLink({ to, label, icon, collapsed }) {
+  return (
+    <li>
+      <NavLink
+        to={to}
+        end
+        className={({ isActive }) =>
+          `flex items-center px-3 py-2 rounded-lg transition ${
+            isActive
+              ? "bg-green-700 text-white font-bold shadow-md"
+              : "text-green-900 hover:bg-green-100"
+          }`
+        }
+      >
+        {icon && <span className="mr-2">{icon}</span>}
+        {!collapsed && label}
+      </NavLink>
+    </li>
   );
 }

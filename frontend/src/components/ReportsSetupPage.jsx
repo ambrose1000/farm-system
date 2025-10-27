@@ -1,6 +1,6 @@
 // src/components/ReportsSetupPage.jsx
 import React from "react";
-import "../styles/reportssetup.css";
+
 
 export default function ReportsSetupPage({ title, children }) {
   return (

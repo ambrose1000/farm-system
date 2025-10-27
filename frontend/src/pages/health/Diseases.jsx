@@ -1,3 +1,4 @@
+// src/pages/settings/Diseases.jsx
 import React, { useState, useEffect } from "react";
 import SetupPage from "../../components/SetupPage";
 import axios from "axios";
@@ -9,6 +10,7 @@ function Diseases() {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Fetch diseases
   const fetchDiseases = async () => {
     try {
       setLoading(true);
@@ -33,8 +35,9 @@ function Diseases() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    if (!name.trim()) return;
+
     const payload = { name: name.trim(), description: description.trim() };
-    if (!payload.name) return;
 
     try {
       if (editingId) {
@@ -74,32 +77,44 @@ function Diseases() {
     }
   };
 
+  // --- Form ---
   const form = (
-    <form onSubmit={handleFormSubmit}>
-      <div className="form-group">
-        <label>Disease Name</label>
+    <form onSubmit={handleFormSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Disease Name</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter disease name..."
           required
+          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         />
       </div>
 
-      <div className="form-group">
-        <label>Description</label>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter disease description..."
+          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         />
       </div>
 
-      <div className="form-actions">
-        <button type="submit">{editingId ? "Update" : "Add"}</button>
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          {editingId ? "Update" : "Add"}
+        </button>
         {editingId && (
-          <button type="button" onClick={resetForm}>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+          >
             Cancel
           </button>
         )}
@@ -107,38 +122,44 @@ function Diseases() {
     </form>
   );
 
+  // --- Table ---
   const table = (
-    <div>
+    <div className="overflow-x-auto">
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-gray-500">Loading...</p>
       ) : (
-        <table className="diseases-table">
-          <thead>
+        <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+          <thead className="bg-gray-50">
             <tr>
-              <th>ID</th>
-              <th>Disease</th>
-              <th>Description</th>
-              <th>Actions</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">ID</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Disease</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Description</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {diseases.length === 0 ? (
               <tr>
-                <td colSpan="4">No records found</td>
+                <td colSpan="4" className="px-4 py-2 text-center text-gray-500">
+                  No records found
+                </td>
               </tr>
             ) : (
               diseases.map((d) => (
                 <tr key={d.id}>
-                  <td>{d.id}</td>
-                  <td>{d.name}</td>
-                  <td>{d.description}</td>
-                  <td>
-                    <button className="edit-btn" onClick={() => handleEdit(d)}>
+                  <td className="px-4 py-2">{d.id}</td>
+                  <td className="px-4 py-2">{d.name}</td>
+                  <td className="px-4 py-2">{d.description}</td>
+                  <td className="px-4 py-2 flex gap-2">
+                    <button
+                      onClick={() => handleEdit(d)}
+                      className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 transition"
+                    >
                       Edit
                     </button>
                     <button
-                      className="delete-btn"
                       onClick={() => handleDelete(d.id)}
+                      className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
                     >
                       Delete
                     </button>

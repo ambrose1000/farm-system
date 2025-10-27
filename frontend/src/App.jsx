@@ -18,7 +18,26 @@ import EventTypes from "./pages/health/EventTypes";
 import HealthSetup from "./pages/health/HealthSetup"; 
 import ReportsDashboard from "./pages/reports/ReportsDashboard";
 import HealthReport from "./pages/reports/HealthReport"; 
+import PurchasePage from "./pages/livestockManagement/PurchasePage";
+import BirthPage from "./pages/livestockManagement/BirthPage";
+import Vendors from "./pages/setup/Vendors";
+import Buyers from "./pages/setup/Buyers";
+import SalesPage from "./pages/livestockManagement/SalesPage";
+import Exit from "./pages/livestockManagement/Exit";
+import IndividualLivestock from "./pages/reports/IndividualLivestock";
+import LivestockHistory from "./pages/reports/LivestockHistory";
+import Inventory from "./pages/inventory/Inventory";
+import BuyerHistory from "./pages/reports/BuyerHistory";
+import VendorHistory from "./pages/reports/VendorHistory";
+import Units from "./pages/inventory/Units";
+import InventoryTypes from "./pages/inventory/InventoryTypes";
+import InventoryItems from "./pages/inventory/InventoryItems";
+import PurchaseOrders from "./pages/inventory/PurchaseOrders";
+import ReceiveGoods from "./pages/inventory/ReceiveGoods";
+import IssueGoods from "./pages/inventory/IssueGoods";
+import Stores from "./pages/inventory/Stores";
 
+import './index.css';
 
 
 
@@ -48,6 +67,9 @@ function App() {
      <Route path="/setup/categories" element={<Categories />} />
       <Route path="/setup/locations" element={<Locations />} />
       <Route path="/setup/Owners" element={<Owners />} />
+       <Route path="/setup/vendors" element={<Vendors />} />
+         <Route path="/buyers" element={<Buyers />} />
+
       <Route path="/health/diseases" element={<Diseases  />} />
       // inside protected routes
 <Route path="/health/medications" element={<Medications />} />
@@ -56,8 +78,23 @@ function App() {
   <Route path="/health/healthsetup" element={<HealthSetup />} />
 
  <Route path="/reports" element={<ReportsDashboard />} />
+ <Route path="/reports/IndividualLivestock" element={<IndividualLivestock />} />
+ <Route path="/reports/LivestockHistory" element={<LivestockHistory />} />
+ <Route path="/reports/VendorHistory/" element={<VendorHistory />} />
+ <Route path="/reports/BuyerHistory" element={<BuyerHistory />} />
  <Route path="/reports/healthreport" element={<HealthReport />} />
+  <Route path="/management/purchase" element={<PurchasePage />} />
+<Route path="/management/birth" element={<BirthPage />} />  
+<Route path="/management/sales" element={<SalesPage />} /> 
+<Route path="/management/exit" element={<Exit />} />
 
+<Route path="/inventory/types" element={<InventoryTypes />} />
+<Route path="/inventory/units" element={<Units />} />
+<Route path="/inventory/items" element={<InventoryItems />} />
+<Route path="/inventory/orders" element={<PurchaseOrders />} />
+<Route path="/inventory/goods" element={<ReceiveGoods />} />
+<Route path="/inventory/issuegoods" element={<IssueGoods />} />
+<Route path="/inventory/stores" element={<Stores />} />
       </Route>
     </Routes>
   );

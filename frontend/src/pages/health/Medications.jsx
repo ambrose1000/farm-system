@@ -37,22 +37,13 @@ function Medications() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      name: name.trim(),
-      description: description.trim(),
-      dosage: dosage.trim(),
-    };
+    const payload = { name: name.trim(), description: description.trim(), dosage: dosage.trim() };
     if (!payload.name) return;
 
     try {
       if (editingId) {
-        const res = await axios.put(
-          `http://localhost:8000/medications/${editingId}`,
-          payload
-        );
-        setMedications((prev) =>
-          prev.map((m) => (m.id === editingId ? res.data : m))
-        );
+        const res = await axios.put(`http://localhost:8000/medications/${editingId}`, payload);
+        setMedications((prev) => prev.map((m) => (m.id === editingId ? res.data : m)));
       } else {
         const res = await axios.post("http://localhost:8000/medications", payload);
         setMedications((prev) => [...prev, res.data]);
@@ -83,41 +74,54 @@ function Medications() {
     }
   };
 
+  // --- Form ---
   const form = (
-    <form onSubmit={handleFormSubmit}>
-      <div className="form-group">
-        <label>Medication Name</label>
+    <form onSubmit={handleFormSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Medication Name</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter medication..."
           required
+          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         />
       </div>
-      <div className="form-group">
-        <label>Description</label>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description</label>
         <input
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter description..."
+          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         />
       </div>
-      <div className="form-group">
-        <label>Dosage</label>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Dosage</label>
         <input
           type="text"
           value={dosage}
           onChange={(e) => setDosage(e.target.value)}
           placeholder="Enter dosage..."
+          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         />
       </div>
 
-      <div className="form-actions">
-        <button type="submit">{editingId ? "Update" : "Add"}</button>
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          {editingId ? "Update" : "Add"}
+        </button>
         {editingId && (
-          <button type="button" onClick={resetForm}>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+          >
             Cancel
           </button>
         )}
@@ -125,40 +129,46 @@ function Medications() {
     </form>
   );
 
+  // --- Table ---
   const table = (
-    <div>
+    <div className="overflow-x-auto">
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-gray-500">Loading...</p>
       ) : (
-        <table className="medications-table">
-          <thead>
+        <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+          <thead className="bg-gray-50">
             <tr>
-              <th>ID</th>
-              <th>Medication</th>
-              <th>Description</th>
-              <th>Dosage</th>
-              <th>Actions</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">ID</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Medication</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Description</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Dosage</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {medications.length === 0 ? (
               <tr>
-                <td colSpan="5">No records found</td>
+                <td colSpan="5" className="px-4 py-2 text-center text-gray-500">
+                  No records found
+                </td>
               </tr>
             ) : (
               medications.map((m) => (
                 <tr key={m.id}>
-                  <td>{m.id}</td>
-                  <td>{m.name}</td>
-                  <td>{m.description}</td>
-                  <td>{m.dosage}</td>
-                  <td>
-                    <button className="edit-btn" onClick={() => handleEdit(m)}>
+                  <td className="px-4 py-2">{m.id}</td>
+                  <td className="px-4 py-2">{m.name}</td>
+                  <td className="px-4 py-2">{m.description}</td>
+                  <td className="px-4 py-2">{m.dosage}</td>
+                  <td className="px-4 py-2 flex gap-2">
+                    <button
+                      onClick={() => handleEdit(m)}
+                      className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 transition"
+                    >
                       Edit
                     </button>
                     <button
-                      className="delete-btn"
                       onClick={() => handleDelete(m.id)}
+                      className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
                     >
                       Delete
                     </button>

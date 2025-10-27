@@ -1,204 +1,347 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
-import "../styles/Dashboard.css";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
 
-export default function Dashboard() {
-  const [livestockList, setLivestockList] = useState([]);
-  const [filteredList, setFilteredList] = useState([]);
-  const [speciesFilter, setSpeciesFilter] = useState("");
-  const [sexFilter, setSexFilter] = useState("");
-  const [ownerSearch, setOwnerSearch] = useState("");
+export default function ReportsDashboard() {
+  const [farm, setFarm] = useState(null);
+  const [livestock, setLivestock] = useState([]);
+  const [owners, setOwners] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [species, setSpecies] = useState([]);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sortConfig, setSortConfig] = useState({ key: "tag_number", direction: "asc" });
+  const [eventSummary, setEventSummary] = useState({
+    sales: 0,
+    purchases: 0,
+    slaughters: 0,
+    deaths: 0,
+    births: 0,
+    registered: 0,
+  });
+  const reportRef = useRef();
 
-  // Fetch livestock data
-  const fetchLivestock = async () => {
+  // ✅ PDF Export with A4-friendly proportions
+  const handleDownloadPDF = async () => {
+    const report = reportRef.current;
+    const canvas = await html2canvas(report, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+    });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 10;
+    const imgWidth = pageWidth - margin * 2;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let position = margin;
+    let heightLeft = imgHeight;
+
+    pdf.text(`${farm?.name || "Farm"} Dashboard Report`, 15, 10);
+    pdf.addImage(imgData, "PNG", margin, position + 5, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      pdf.addPage();
+      position = heightLeft - imgHeight;
+      pdf.addImage(imgData, "PNG", margin, position + 10, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(`${farm?.name || "Farm"}_Dashboard_Report.pdf`);
+  };
+
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/livestock");
-      setLivestockList(response.data);
-      setFilteredList(response.data);
+      const [
+        farmRes,
+        livestockRes,
+        categoriesRes,
+        ownersRes,
+        locationsRes,
+        eventsRes,
+        livestockEventsRes,
+        speciesRes,
+      ] = await Promise.all([
+        api.get("/farm"),
+        api.get("/livestock/"),
+        api.get("/categories/"),
+        api.get("/owners/"),
+        api.get("/locations/"),
+        api.get("/events/"),
+        api.get("/livestock-events/"),
+        api.get("/species/"),
+      ]);
+
+      setFarm(farmRes.data);
+      setLivestock(livestockRes.data);
+      setCategories(categoriesRes.data);
+      setOwners(ownersRes.data);
+      setLocations(locationsRes.data);
+      setEvents(eventsRes.data);
+      setSpecies(speciesRes.data);
+
+      const eventsData = Array.isArray(livestockEventsRes.data)
+        ? livestockEventsRes.data
+        : [];
+
+      const summary = eventsData.reduce(
+        (acc, e) => {
+          const type = (e.event_type || "").toLowerCase();
+          if (type.includes("sale")) acc.sales++;
+          else if (type.includes("purchase")) acc.purchases++;
+          else if (type.includes("slaughter")) acc.slaughters++;
+          else if (type.includes("death")) acc.deaths++;
+          else if (type.includes("birth")) acc.births++;
+          else if (type.includes("registered")) acc.registered++;
+          return acc;
+        },
+        { sales: 0, purchases: 0, slaughters: 0, deaths: 0, births: 0, registered: 0 }
+      );
+      setEventSummary(summary);
     } catch (err) {
-      console.error("Error fetching livestock:", err);
-      setError("Failed to load livestock data.");
+      console.error("Error fetching report data:", err);
+      setError("Failed to load reports data.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchLivestock();
+    fetchData();
   }, []);
 
-  // Apply filters
-  useEffect(() => {
-    let data = [...livestockList];
+  const getOwnerName = (id) => owners.find((o) => o.id === id)?.name || "Unknown";
+  const getLocationName = (id) =>
+    locations.find((l) => l.id === id)?.name || "Unknown";
+  const getSpeciesName = (id) =>
+    species.find((s) => s.id === id)?.name || "Unknown";
 
-    if (speciesFilter) {
-      data = data.filter(
-        (animal) => animal.species?.toLowerCase() === speciesFilter.toLowerCase()
-      );
-    }
-    if (sexFilter) {
-      data = data.filter(
-        (animal) => animal.sex?.toLowerCase() === sexFilter.toLowerCase()
-      );
-    }
-    if (ownerSearch) {
-      data = data.filter((animal) =>
-        animal.owner_name?.toLowerCase().includes(ownerSearch.toLowerCase())
-      );
-    }
+  const activeLivestock = livestock.filter((a) => a.availability === "active");
 
-    // Apply sorting
-    if (sortConfig.key) {
-      data.sort((a, b) => {
-        const aVal = a[sortConfig.key] || "";
-        const bVal = b[sortConfig.key] || "";
-        if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
-    setFilteredList(data);
-  }, [speciesFilter, sexFilter, ownerSearch, livestockList, sortConfig]);
-
-  // Count livestock by species
-  const speciesCounts = livestockList.reduce((acc, animal) => {
-    acc[animal.species] = (acc[animal.species] || 0) + 1;
+  const locationCounts = activeLivestock.reduce((acc, a) => {
+    const loc = getLocationName(a.location_id);
+    acc[loc] = (acc[loc] || 0) + 1;
     return acc;
   }, {});
 
-  const handleSort = (key) => {
-    setSortConfig((prev) => {
-      if (prev.key === key) {
-        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
-      }
-      return { key, direction: "asc" };
-    });
-  };
+  const ownerCounts = activeLivestock.reduce((acc, a) => {
+    const owner = getOwnerName(a.owner_id);
+    acc[owner] = (acc[owner] || 0) + 1;
+    return acc;
+  }, {});
+
+  const categoriesBySpecies = species.map((sp) => {
+    const speciesLivestock = activeLivestock.filter((a) => a.species_id === sp.id);
+    const counts = speciesLivestock.reduce((acc, a) => {
+      const category =
+        categories.find((c) => c.id === a.category_id)?.name || "Unknown";
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {});
+    return { species: sp.name, counts };
+  });
+
+  const speciesCounts = activeLivestock.reduce((acc, a) => {
+    const sp = getSpeciesName(a.species_id);
+    acc[sp] = (acc[sp] || 0) + 1;
+    return acc;
+  }, {});
+
+  const eventChartData = [
+    { name: "Sales", value: eventSummary.sales },
+    { name: "Purchases", value: eventSummary.purchases },
+    { name: "Births", value: eventSummary.births },
+    { name: "Deaths", value: eventSummary.deaths },
+    { name: "Slaughters", value: eventSummary.slaughters },
+    { name: "Registered", value: eventSummary.registered },
+  ];
+
+  const COLORS = ["#60a5fa", "#34d399", "#a78bfa", "#f87171", "#fbbf24", "#9ca3af"];
 
   return (
-    <div className="dashboard">
-      <h2>Farm Dashboard</h2>
+    <div className="ml-64 bg-gray-100 min-h-screen p-6 print:p-0">
+      <div
+        ref={reportRef}
+        className="bg-white max-w-[210mm] mx-auto p-8 rounded-xl shadow-md print:shadow-none print:rounded-none print:w-[210mm]"
+      >
+        {/* Header */}
+        <header className="text-center border-b pb-4 mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 uppercase">
+            {farm?.name || "Farm"} - Dashboard Report
+          </h1>
+          <p className="text-gray-500 text-sm">
+            Generated on {new Date().toLocaleDateString()}
+          </p>
+        </header>
 
-      {/* Loading / Error / Empty states */}
-      {loading && <p>Loading livestock...</p>}
-      {error && <p className="error">{error}</p>}
-      {!loading && !error && livestockList.length === 0 && (
-        <p>No livestock data available.</p>
-      )}
+        {/* Download Button (hidden in print) */}
+        <div className="flex justify-end mb-6 print:hidden">
+          <button
+            onClick={handleDownloadPDF}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm"
+          >
+            ⬇️ Download PDF
+          </button>
+        </div>
 
-      {/* Summary cards */}
-      <div className="summary-cards">
-        {Object.keys(speciesCounts).map((species) => (
-          <div className="card" key={species}>
-            <h3>{species}</h3>
-            <p>{speciesCounts[species]} total</p>
-          </div>
-        ))}
-      </div>
+        {loading && <p className="text-center text-gray-500">Loading data...</p>}
+        {error && (
+          <p className="text-center text-red-600 bg-red-50 p-3 rounded-lg">{error}</p>
+        )}
 
-      {/* Filters */}
-     <div className="filters">
-  <input
-    type="text"
-    placeholder="Search by owner..."
-    value={ownerSearch}
-    onChange={(e) => setOwnerSearch(e.target.value)}
-  />
-  <select
-    value={speciesFilter}
-    onChange={(e) => setSpeciesFilter(e.target.value)}
-  >
-    <option value="">All Species</option>
-    {[...new Set(livestockList.map((a) => a.species))].map((s) => (
-      <option key={s} value={s}>
-        {s}
-      </option>
-    ))}
-  </select>
-  <select
-    value={sexFilter}
-    onChange={(e) => setSexFilter(e.target.value)}
-  >
-    <option value="">All Sexes</option>
-    <option value="male">Male</option>
-    <option value="female">Female</option>
-  </select>
+        {!loading && !error && (
+          <div className="space-y-8 text-sm leading-relaxed">
+            {/* Active livestock */}
+            <section>
+              <h2 className="font-semibold text-gray-700 mb-2">Active Livestock</h2>
+              <table className="w-full border border-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="border px-2 py-1 text-left">Total Active</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border px-2 py-1 font-bold text-green-700">
+                      {activeLivestock.length}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
 
-  {/* Generate Report Button */}
- {/* Generate Report Button */}
-<button
-  className="generate-report-btn"
-  onClick={async () => {
-    try {
-      const response = await api.get("/reports/daily", {
-        responseType: "blob", // important for downloading files
-      });
-
-      // Create a URL and trigger download
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "daily_report.pdf");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (err) {
-      console.error("Error generating report:", err);
-      alert("Failed to generate report. Try again later.");
-    }
-  }}
->
-  📄 Generate Report
-</button>
-
-</div>
-
-      {/* Filtered Table */}
-      {filteredList.length > 0 ? (
-        <table className="livestock-table">
-          <thead>
-            <tr>
-              <th onClick={() => handleSort("tag_number")}>Tag Number</th>
-              <th onClick={() => handleSort("species")}>Species</th>
-              <th onClick={() => handleSort("sex")}>Sex</th>
-              <th onClick={() => handleSort("owner_name")}>Owner</th>
-              <th onClick={() => handleSort("status")}>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredList.map((animal) => (
-              <tr key={animal.id}>
-                <td>{animal.tag_number}</td>
-                <td>{animal.species}</td>
-                <td>{animal.sex}</td>
-                <td>
-                  {ownerSearch
-                    ? animal.owner_name?.replace(
-                        new RegExp(ownerSearch, "i"),
-                        (match) => `<mark>${match}</mark>`
-                      )
-                    : animal.owner_name}
-                </td>
-                <td>{animal.status}</td>
-              </tr>
+            {/* Reusable Table Section */}
+            {[
+              { title: "Livestock by Location", data: locationCounts },
+              { title: "Livestock by Owner", data: ownerCounts },
+              { title: "Active Livestock by Species", data: speciesCounts },
+            ].map(({ title, data }) => (
+              <section key={title}>
+                <h2 className="font-semibold text-gray-700 mb-2">{title}</h2>
+                <table className="w-full border border-gray-300">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="border px-2 py-1 text-left">Name</th>
+                      <th className="border px-2 py-1 text-right">Count</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(data).map(([key, val]) => (
+                      <tr key={key}>
+                        <td className="border px-2 py-1">{key}</td>
+                        <td className="border px-2 py-1 text-right">{val}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
             ))}
-          </tbody>
-        </table>
-      ) : (
-        !loading && <p>No livestock match the filters.</p>
-      )}
 
-      {/* Count below table */}
-      <div className="results-count">
-        Showing {filteredList.length} livestock
-        {ownerSearch && ` for owner "${ownerSearch}"`}
-        {speciesFilter && ` in species "${speciesFilter}"`}
-        {sexFilter && ` of sex "${sexFilter}"`}
+            {/* Category per species */}
+            <section>
+              <h2 className="font-semibold text-gray-700 mb-2">
+                Livestock by Category per Species
+              </h2>
+              {categoriesBySpecies.map((sp) => (
+                <div key={sp.species} className="mb-3">
+                  <h3 className="text-gray-700 font-semibold text-sm mb-1">
+                    🐄 {sp.species}
+                  </h3>
+                  <table className="w-full border border-gray-300">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="border px-2 py-1 text-left">Category</th>
+                        <th className="border px-2 py-1 text-right">Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(sp.counts).map(([c, n]) => (
+                        <tr key={c}>
+                          <td className="border px-2 py-1">{c}</td>
+                          <td className="border px-2 py-1 text-right">{n}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </section>
+
+            {/* Event summary */}
+            <section>
+              <h2 className="font-semibold text-gray-700 mb-2">Event Summary</h2>
+              <table className="w-full border border-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="border px-2 py-1 text-left">Event Type</th>
+                    <th className="border px-2 py-1 text-right">Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(eventSummary).map(([k, v]) => (
+                    <tr key={k}>
+                      <td className="border px-2 py-1 capitalize">{k}</td>
+                      <td className="border px-2 py-1 text-right">{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+
+            {/* Charts */}
+            <section className="grid md:grid-cols-2 gap-4 print:hidden">
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={eventChartData}>
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="value" fill="#2563eb" />
+                </BarChart>
+              </ResponsiveContainer>
+
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={eventChartData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={90}
+                    label
+                    dataKey="value"
+                  >
+                    {eventChartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </section>
+          </div>
+        )}
       </div>
     </div>
   );

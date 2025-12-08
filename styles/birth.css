@@ -1,0 +1,102 @@
+.birth-form {
+  background: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.birth-form h2 {
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  color: #333;
+}
+
+.birth-form .form-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.birth-form select,
+.birth-form input,
+.birth-form textarea {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.birth-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.birth-form .submit-btn {
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.birth-form .submit-btn:hover {
+  background: #45a049;
+}
+
+/* Table Styles */
+.birth-table {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.birth-table h2 {
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  color: #333;
+}
+
+.birth-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.birth-table th,
+.birth-table td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.birth-table th {
+  background: #f8f8f8;
+  font-weight: 600;
+}
+
+.birth-table tr:hover {
+  background: #fafafa;
+}
+
+.birth-table button {
+  margin-right: 5px;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.birth-table button:first-child {
+  background: #f44336;
+  color: white;
+}
+
+.birth-table button:first-child:hover {
+  background: #d32f2f;
+}

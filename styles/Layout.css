@@ -1,0 +1,16 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;                  /* take remaining space */
+  margin-left: 240px;        /* same as sidebar width */
+  padding: 1rem;
+  background-color: #f4f7f6;
+  transition: margin-left 0.3s;
+}
+
+.sidebar.collapsed + .main-content {
+  margin-left: 60px;        /* adjust when sidebar collapses */
+}

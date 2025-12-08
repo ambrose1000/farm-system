@@ -1,0 +1,49 @@
+@import "./styles/global.css";
+
+@import "tailwindcss";
+
+
+@layer base {
+  html {
+    font-family: 'Inter', sans-serif;
+    background-color: #c5a46d; /* optional light background */
+    color: #c5a46d;
+  }
+}
+/* src/index.css or global Tailwind section */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  @apply w-full border border-gray-300 rounded-lg p-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.form-actions button {
+  @apply bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition mr-2;
+}
+
+.form-actions button.cancel {
+  @apply bg-gray-300 text-gray-700 hover:bg-gray-400;
+}
+
+.setup-table table {
+  @apply w-full border-collapse text-sm;
+}
+
+.setup-table th,
+.setup-table td {
+  @apply border border-gray-200 p-2 text-left;
+}
+
+.setup-table th {
+  @apply bg-gray-100 font-medium;
+}
+
+.setup-table tr:nth-child(even) {
+  @apply bg-gray-50;
+}
+
+.setup-table button {
+  @apply bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition;
+}
+
+

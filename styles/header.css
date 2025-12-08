@@ -1,0 +1,74 @@
+/* Header bar */
+.header {
+  height: 60px;
+  width: 100%;
+  background-color: #a8d5ba; /* light green theme */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  border-bottom: 2px solid #8fcf9c;
+}
+
+/* Left section (logo + name) */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+}
+
+.farm-name {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #0b3d2e;
+}
+
+/* Right section (logout button) */
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.header .logout-btn {
+  background: #6fbf8d;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s ease;
+}
+
+.header .logout-btn:hover {
+  background: #5aa879;
+}
+/* Main content (header + page) */
+.layout-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 240px; /* leave space for sidebar */
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #3cb371;
+  color: white;
+  padding: 10px 20px;
+  height: 70px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}

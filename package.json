@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "react-countup": "^6.5.3",
+    "react-icons": "^5.5.0",
+    "react-select": "^5.10.2"
+  }
+}

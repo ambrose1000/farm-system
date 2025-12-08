@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: farmuser
+      POSTGRES_PASSWORD: farmsecret
+      POSTGRES_DB: farmdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - farm_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    environment:
+      - DATABASE_URL=postgresql://farmuser:farmsecret@db:5432/farmdb
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    build:
+      context: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://192.168.0.115:8000  
+    volumes:
+      - ./frontend:/code
+      - /code/node_modules
+    working_dir: /code
+    command: ["npm", "run", "dev"]
+
+volumes:
+  farm_data:
